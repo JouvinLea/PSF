@@ -18,7 +18,7 @@ def triplegauss(theta2,s1,s2,s3,A2,A3):
     gaus3 = np.exp(-theta2/(2*s32))
 
     y = (gaus1 + A2*gaus2 + A3*gaus3) 
-    norm =  2*(s12+ np.abs(A2) * s22 + np.abs(A3) * s32)
+    norm =  2*math.pi*(s12+ np.abs(A2) * s22 + np.abs(A3) * s32)
     return y/norm
     #return y
 
@@ -48,9 +48,10 @@ nbins=50
 theta2hist=np.logspace(np.log10(theta2min), np.log10(theta2max),nbins)
 #theta2hist=np.linspace(theta2min, theta2max,nbins)
 
-#ListRun = glob('run*.fits')
-ListRun = ["run_14012110_elm_south_stereo_Prod15_4_eventlist.fits"]
+ListRun = glob('run*.fits')
+#ListRun = ["run_14012110_elm_south_stereo_Prod15_4_eventlist.fits"]
 #ListRun = ["run_14012105_elm_south_stereo_Prod15_4_eventlist.fits"]
+#ListRun = ["run_14012120_elm_south_stereo_Prod15_4_eventlist.fits"]
 for (i,file) in enumerate(ListRun):
     hdu=pyfits.open(file)
     hdu=pf.open(file)
@@ -60,7 +61,6 @@ for (i,file) in enumerate(ListRun):
 
     hist, bin_edges = np.histogram(theta2,theta2hist)
     PSF=PSFfit(theta2f)
-    #m=iminuit.Minuit(PSF.nllp_triplegauss, s1=0.02, s2=0.05,s3=0.08, A2=0.3,A3=0.1, limit_A2 = (1e-10,10.),limit_A3 = (1e-10,10.),limit_s1 = (0.005,0.1), limit_s2 = (0.005,0.2),limit_s3 = (0.02,0.5))
     m=iminuit.Minuit(PSF.nllp_triplegauss, s1=0.02, s2=0.05,s3=0.08, A2=0.3,A3=0.1,
                  limit_A2 = (1e-10,10.),limit_A3 = (1e-10,10.),
                  limit_s1 = (0.005,0.1), limit_s2 = (0.005,0.2),
@@ -77,28 +77,20 @@ for (i,file) in enumerate(ListRun):
     A2=m.values['A2']
     A3=m.values['A3']
 
-    #theta2bin = 0.5*(bin_edges[:-1] + bin_edges[1:])
-    #thetafit=np.linspace(theta2bin[0],theta2bin[-1],100)
+    #If the energy bin are in log, we have to take sqrt(Emin*Emax) for the center of the bin
     theta2bin = np.sqrt(bin_edges[:-1] * bin_edges[1:])
     thetafit=np.logspace(np.log10(theta2bin[0]),np.log10(theta2bin[-1]),100)
     fitfun = triplegauss(thetafit,s1,s2,s3,A2,A3)
-    #fitfun = triplegauss(theta2bin,s1,s2,s3,A2,A3)
-    #hist_norm = hist/float(np.sum(hist))*2
-    #hist_err = np.sqrt(hist)/float(np.sum(hist))*2
-    #hist_norm = hist/float(np.sum(hist))
-    #hist_err = np.sqrt(hist)/float(np.sum(hist))
-    bsize = np.diff(bin_edges)
+    #We have to divide by the solid angle of each bin= pi*dO^2 to normalize the histogram
+    bsize = np.diff(bin_edges)*math.pi
     hist_norm = hist/float(np.sum(hist))/bsize
-    # use gehrels errors for low counts
+    # use gehrels errors for low counts (http://cxc.harvard.edu/sherpa4.4/statistics/)
     hist_err = (1+np.sqrt(hist+0.75))/float(np.sum(hist))/bsize
     print file
     print i
     pt.figure(i)
     pt.loglog(thetafit, fitfun , label="fit")
-    #pt.loglog(theta2bin, fitfun , label="fit")
-    #pt.loglog(theta2bin, hist_norm*2, label="histnorm")
     pt.errorbar(theta2bin, hist_norm,yerr = hist_err, label="hist")
-    #pt.plot(theta2hist[0:-1], hist, label="hist")
     pt.legend()
     pt.savefig("fitspsf_run_"+file[4:12]+".jpg")
 
