@@ -25,10 +25,40 @@ def triplegauss(theta2,s1,s2,s3,A2,A3):
     norm =  2*math.pi*(s12+ np.abs(A2) * s22 + np.abs(A3) * s32)
     return y/norm
 
-def bin_contigu(x,data,model_fun):
-    i_sup=np.where(data > model_fun(x))
-    i_inf=np.where(data < model_fun(x))
-    return i_sup,i_inf
+def bin_contigu(x,data,model_fun, threshold):
+    i_sup=np.where(data > model_fun(x))[0]
+    i_inf=np.where(data < model_fun(x))[0]
+    List_sup=[]
+    List_inf=[]
+    iband=0
+    for i,i_s in enumerate(i_sup.tolist()):
+        if(i==0):
+            List_sup.append([i_s])
+        elif(i_s == i_sup[i-1]+1):
+            List_sup[iband].append(i_s)
+        else:
+            List_sup.append([i_s])
+            iband += 1
+    iband=0
+    for i,i_i in enumerate(i_inf.tolist()):
+        if(i==0):
+            List_inf.append([i_i])
+        elif(i_i == i_inf[i-1]+1):
+            List_inf[iband].append(i_i)
+        else:
+            List_inf.append([i_i])
+            iband += 1
+    Npoints=len(x)
+    Nsup=len(List_sup)
+    Ninf=len(List_inf)
+    for i in range(Nsup):
+        if(len(List_sup[i])>= threshold*Npoints):
+            print "WARNING: There are ",len(List_sup[i]) ," values that are superior to the fit"
+    for i in range(Ninf):
+        if(len(List_inf[i])>= threshold*Npoints):
+            print "WARNING: There are ",len(List_inf[i]) ," values that are inferiror to the fit"
+        
+    return i_sup,List_sup,i_inf,List_inf
 
 # Figure definitions
 def khi2(x,data,err,model_fun):
@@ -71,7 +101,8 @@ theta2hist=np.logspace(np.log10(theta2min), np.log10(theta2max),nbins)
 MC energy, zenithal angle, offset and efficiency
 """
 #enMC = [0.02, 0.03, 0.05, 0.08, 0.125, 0.2, 0.3, 0.5, 0.8, 1.25, 2, 3, 5, 8, 12.5, 20, 30, 50, 80, 125]
-enMC = [0.08, 0.125, 0.2, 0.3, 0.5, 0.8, 1.25, 2, 3, 5, 8, 12.5, 20, 30, 50, 80, 125]
+#enMC = [0.08, 0.125, 0.2, 0.3, 0.5, 0.8, 1.25, 2, 3, 5, 8, 12.5, 20, 30, 50, 80, 125]
+enMC = [1.25]
 lnenMC = np.log10(enMC)
 #zenMC = [0, 18, 26, 32, 37, 41, 46, 50, 53, 57, 60, 63, 67, 70]
 #effMC = [50, 60, 70, 80, 90, 100]
@@ -150,8 +181,8 @@ for (ieff, eff) in enumerate(effMC):
                     i_nonnulle=np.where(hist_norm!=0)
                     fitfun = lambda x : triplegauss(x,s1,s2,s3,A2,A3)
                     save_fig="fitspsf_run_"+run_number+".jpg"
-                    plot_fit_delchi(theta2bin[i_nonnulle],hist_norm[i_nonnulle],hist_err[i_nonnulle],fitfun,save_fig)
+                    #plot_fit_delchi(theta2bin[i_nonnulle],hist_norm[i_nonnulle],hist_err[i_nonnulle],fitfun,save_fig)
                     print "khi2= ", khi2(theta2bin,hist_norm,hist_err,fitfun)
-                    #i_sup,i_inf=bin_contigu(theta2bin,hist_norm,fitfun)
+                    i_sup,List_sup,i_inf,List_inf=bin_contigu(theta2bin,hist_norm,fitfun,1/25.)
                     np.savez("PSF_"+config+".npz", TableSigma1=TableSigma1, TableSigma2=TableSigma2, TableSigma3=TableSigma3, TableA2=TableA2, TableA3=TableA3)
                         
