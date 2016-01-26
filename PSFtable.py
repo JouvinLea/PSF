@@ -89,20 +89,17 @@ def plot_fit_delchi(x,data,err,model_fun,save_fig):
     plt.savefig(save_fig)
 
 
-"""
-Hist theta2 definition
-"""    
-theta2min=1e-4
+#theta2min=1e-4
 theta2max=0.3
-nbins=10
-theta2hist=np.logspace(np.log10(theta2min), np.log10(theta2max),nbins)
+#nbins=50
+#theta2hist=np.logspace(np.log10(theta2min), np.log10(theta2max),nbins)
 
 """
 MC energy, zenithal angle, offset and efficiency
 """
 #enMC = [0.02, 0.03, 0.05, 0.08, 0.125, 0.2, 0.3, 0.5, 0.8, 1.25, 2, 3, 5, 8, 12.5, 20, 30, 50, 80, 125]
-#enMC = [0.08, 0.125, 0.2, 0.3, 0.5, 0.8, 1.25, 2, 3, 5, 8, 12.5, 20, 30, 50, 80, 125]
-enMC = [0.08]
+enMC = [0.08, 0.125, 0.2, 0.3, 0.5, 0.8, 1.25, 2, 3, 5, 8, 12.5, 20, 30, 50, 80, 125]
+#enMC = [0.08]
 lnenMC = np.log10(enMC)
 #zenMC = [0, 18, 26, 32, 37, 41, 46, 50, 53, 57, 60, 63, 67, 70]
 #effMC = [50, 60, 70, 80, 90, 100]
@@ -144,8 +141,19 @@ for (ieff, eff) in enumerate(effMC):
                     print hdu[4].header["HIERARCH TARGETOFFSET"]
                     print str("%.2f"%hdu[4].data["E_MIN"])
                     theta2 = hdu[1].data["MC_ThSq"]
+                    Nev_perbin=10
+                    Nbinmax=50
                     index = [theta2<theta2max]
                     theta2f = theta2[index]
+                    Nev=len(theta2f)
+                    while(Nev/Nev_perbin >  Nbinmax):
+                        Nev_perbin = Nev_perbin * 2
+                    theta2fsorted=np.sort(theta2f)
+                    theta2hist=np.array(theta2fsorted[0])
+                    index_theta2_hist=np.arange(Nev_perbin, Nev, Nev_perbin)
+                    for i in index_theta2_hist:
+                        #print theta2hist_variablesize
+                        theta2hist = np.append(theta2hist, theta2fsorted[i])                        
                     #MINIMIZATION
                     hist, bin_edges = np.histogram(theta2,theta2hist)
                     PSF=PSFfit.PSFfit(theta2f)
@@ -170,8 +178,9 @@ for (ieff, eff) in enumerate(effMC):
                     TableA2[ien, ioff, izen, ieff] = A2
                     TableA3[ien, ioff, izen, ieff] = A3
                     #If the energy bin are in log, we have to take sqrt(Emin*Emax) for the center of the bin
-                    theta2bin = np.sqrt(bin_edges[:-1] * bin_edges[1:])
-                    thetafit=np.logspace(np.log10(theta2bin[0]),np.log10(theta2bin[-1]),100)
+                    #theta2bin = np.sqrt(bin_edges[:-1] * bin_edges[1:])
+                    theta2bin = (bin_edges[:-1] + bin_edges[1:])/2.
+                    #thetafit=np.logspace(np.log10(theta2bin[0]),np.log10(theta2bin[-1]),100)
                     #fitfun = triplegauss(thetafit,s1,s2,s3,A2,A3)
                     #We have to divide by the solid angle of each bin= pi*dO^2 to normalize the histogram
                     bsize = np.diff(bin_edges)*math.pi
