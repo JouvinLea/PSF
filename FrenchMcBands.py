@@ -42,3 +42,9 @@ class FrenchMcBands(object):
         i=np.where(np.asarray(self.enMC)==E)[0]
         return self.enMC_digit[i]
     
+    def run_number(self,zen, off, E):
+        nen=self.find_enMC_digit(E)
+        nzen=self.find_zenMC_digit(zen)
+        noff=self.find_offMC_digit(off)
+        return self.part_type_digit+self.azimuth_digit+nzen+noff+self.energy_type+nen
+    
