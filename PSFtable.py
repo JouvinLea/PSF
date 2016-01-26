@@ -88,7 +88,19 @@ def plot_fit_delchi(x,data,err,model_fun,save_fig):
     plt.subplots_adjust(hspace=0.1)
     plt.savefig(save_fig)
 
-
+def theta2_bin(data, Nev_bin, Nbinmax):
+    """
+    Define an adaptative theta2binning in order to have at least 10 evnts per bin
+    """
+    Nev=len(data)
+    while(Nev/Nev_bin >  Nbinmax):
+        Nev_bin = Nev_bin * 2
+    theta2sorted=np.sort(data)
+    theta2bin=np.array(theta2sorted[0])
+    index=np.arange(Nev_bin, Nev, Nev_bin)
+    for i in index:
+        theta2bin = np.append(theta2bin, theta2sorted[i]) 
+    return theta2bin
 #theta2min=1e-4
 theta2max=0.3
 #nbins=50
@@ -141,20 +153,11 @@ for (ieff, eff) in enumerate(effMC):
                     print hdu[4].header["HIERARCH TARGETOFFSET"]
                     print str("%.2f"%hdu[4].data["E_MIN"])
                     theta2 = hdu[1].data["MC_ThSq"]
-                    Nev_perbin=10
-                    Nbinmax=50
                     index = [theta2<theta2max]
                     theta2f = theta2[index]
-                    Nev=len(theta2f)
-                    while(Nev/Nev_perbin >  Nbinmax):
-                        Nev_perbin = Nev_perbin * 2
-                    theta2fsorted=np.sort(theta2f)
-                    theta2hist=np.array(theta2fsorted[0])
-                    index_theta2_hist=np.arange(Nev_perbin, Nev, Nev_perbin)
-                    for i in index_theta2_hist:
-                        #print theta2hist_variablesize
-                        theta2hist = np.append(theta2hist, theta2fsorted[i])                        
-                    #MINIMIZATION
+                    Nev_perbin=10
+                    Nbinmax=50
+                    theta2hist=theta2_bin(theta2f, Nev_perbin, Nbinmax)
                     hist, bin_edges = np.histogram(theta2,theta2hist)
                     PSF=PSFfit.PSFfit(theta2f)
                     m=iminuit.Minuit(PSF.nllp_triplegauss, s1=0.02, s2=0.05,s3=0.08, A2=0.3,A3=0.1,
