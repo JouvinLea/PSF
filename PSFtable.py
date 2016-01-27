@@ -5,6 +5,7 @@ import math
 import matplotlib.gridspec as gridspec
 import FrenchMcBands
 import PSFfit
+from astropy.stats import poisson_conf_interval
 plt.ion()
 
 """
@@ -105,6 +106,9 @@ def theta2_bin(data, Nev_bin, Nbinmax):
     for i in index:
         theta2bin = np.append(theta2bin, theta2sorted[i]) 
     return theta2bin
+
+
+
 #theta2min=1e-4
 theta2max=0.3
 #nbins=50
@@ -114,9 +118,9 @@ theta2max=0.3
 MC energy, zenithal angle, offset and efficiency
 """
 #enMC = [0.02, 0.03, 0.05, 0.08, 0.125, 0.2, 0.3, 0.5, 0.8, 1.25, 2, 3, 5, 8, 12.5, 20, 30, 50, 80, 125]
-#enMC = [0.08, 0.125, 0.2, 0.3, 0.5, 0.8, 1.25, 2, 3, 5, 8, 12.5, 20, 30, 50, 80, 125]
+enMC = [0.08, 0.125, 0.2, 0.3, 0.5, 0.8, 1.25, 2, 3, 5, 8, 12.5, 20, 30, 50, 80, 125]
 enMC = [125]
-lnenMC = np.log10(enMC)
+#lnenMC = np.log10(enMC)
 #zenMC = [0, 18, 26, 32, 37, 41, 46, 50, 53, 57, 60, 63, 67, 70]
 #effMC = [50, 60, 70, 80, 90, 100]
 #offMC = [0.0, 0.5, 1.0, 1.5, 2.0, 2.5]
@@ -180,19 +184,16 @@ for (ieff, eff) in enumerate(effMC):
                     #theta2bin = np.sqrt(bin_edges[:-1] * bin_edges[1:])
                     theta2bin = (bin_edges[:-1] + bin_edges[1:])/2.
                     #thetafit=np.logspace(np.log10(theta2bin[0]),np.log10(theta2bin[-1]),100)
-                    #fitfun = triplegauss(thetafit,s1,s2,s3,A2,A3)
                     #We have to divide by the solid angle of each bin= pi*dO^2 to normalize the histogram
                     bsize = np.diff(bin_edges)*math.pi
                     hist_norm = hist/float(np.sum(hist))/bsize
                     # use gehrels errors for low counts (http://cxc.harvard.edu/sherpa4.4/statistics/)
                     hist_err = (1+np.sqrt(hist+0.75))/float(np.sum(hist))/bsize
-                    i_nonnulle=np.where(hist_norm!=0)
-                    fitfun = lambda x : triplegauss(x,s1,s2,s3,A2,A3)
-                    fitfun2 = lambda x : king(x,sig,gam)
+                    test=poisson_conf_interval(hist,"frequentist-confidence")/float(np.sum(hist))/bsize
+                    fitgauss = lambda x : triplegauss(x,s1,s2,s3,A2,A3)
+                    fitking = lambda x : king(x,sig,gam)
                     save_fig="plot/triplegauss_fitspsf_run_"+run_number+".jpg"
-                    plot_fit_delchi(theta2bin[i_nonnulle],hist_norm[i_nonnulle],hist_err[i_nonnulle],fitfun,save_fig)
+                    plot_fit_delchi(theta2bin,hist_norm,hist_err,fitgauss,save_fig)
                     save_fig2="plot/king_fitspsf_run_"+run_number+".jpg"
-                    plot_fit_delchi(theta2bin[i_nonnulle],hist_norm[i_nonnulle],hist_err[i_nonnulle],fitfun2,save_fig2)
-                    print "khi2= ", khi2(theta2bin,hist_norm,hist_err,fitfun)
-                    #i_sup,List_sup,i_inf,List_inf=bin_contigu(theta2bin,hist_norm,fitfun,1/25.)
-                     
+                    plot_fit_delchi(theta2bin,hist_norm,hist_err,fitking,save_fig2)
+                    
