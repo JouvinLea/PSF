@@ -47,8 +47,8 @@ class PSFfit(object):
             s3 = np.max([s1_m,s2_m,s3_m])
             return (s1, s2 , s3, m.values['A2'], m.values['A3'])        
         elif(model_func=="king"):
-            #m=iminuit.Minuit(PSF.nllp_king, sig=0.02, gam=2, limit_sig = (1e-10,10.),limit_gam = (1e-10,10.))
-            m=iminuit.Minuit(self.nllp_king, sig=0.07, gam=1.5, limit_sig = (1e-10,10.),limit_gam = (1e-10,10.))
+            m=iminuit.Minuit(self.nllp_king, sig=0.02, gam=2, limit_sig = (1e-10,10.),limit_gam = (1e-10,10.))
+            #m=iminuit.Minuit(self.nllp_king, sig=0.07, gam=1.5, limit_sig = (1e-10,10.),limit_gam = (1e-10,10.))
             m.migrad()
             return (m.values['sig'],m.values['gam']) 
         else:

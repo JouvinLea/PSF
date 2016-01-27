@@ -7,6 +7,7 @@ import FrenchMcBands
 import PSFfit
 from astropy.stats import poisson_conf_interval
 plt.ion()
+from scipy import stats
 
 """
 Fonction defenition
@@ -93,6 +94,28 @@ def plot_fit_delchi(x,data,err,model_fun,save_fig):
     plt.subplots_adjust(hspace=0.1)
     plt.savefig(save_fig)
 
+def plot_fit_delchi_test(x,data,err,model_fun,save_fig):
+    fig = plt.figure()
+    gs = gridspec.GridSpec(4, 1)
+    ax1 = fig.add_subplot(gs[:3,:]) # rows, cols, plot_num.
+    ax1.set_xscale("log", nonposx='clip')
+    ax1.set_yscale("log", nonposy='clip')
+
+    ax1.errorbar(x,data,yerr=err,fmt='o',color='k')
+    xmod = np.linspace(np.min(x),np.max(x),10000)
+    KHI2=khi2(x, data, err, model_fun)
+    line1,=ax1.plot(x,model_fun(x))
+    ax1.plot(x,model_fun(x))
+    ax1.get_xaxis().set_visible(False)
+    plt.legend([line1], ["khi2= "+str("%.2f"%KHI2)])
+
+    #ax2 = fig.add_subplot(gs[3,:],sharex=ax1) 
+    #ax2.plot(xmod,np.zeros_like(xmod),color='k')
+    #resid = (data - model_fun(x))/err
+    #ax2.errorbar(x, resid, yerr=np.ones_like(x), fmt='o', color='k')
+    #plt.subplots_adjust(hspace=0.1)
+    plt.savefig(save_fig)
+    
 def theta2_bin(data, Nev_bin, Nbinmax):
     """
     Define an adaptative theta2binning in order to have at least 10 evnts per bin
@@ -119,7 +142,7 @@ MC energy, zenithal angle, offset and efficiency
 """
 #enMC = [0.02, 0.03, 0.05, 0.08, 0.125, 0.2, 0.3, 0.5, 0.8, 1.25, 2, 3, 5, 8, 12.5, 20, 30, 50, 80, 125]
 enMC = [0.08, 0.125, 0.2, 0.3, 0.5, 0.8, 1.25, 2, 3, 5, 8, 12.5, 20, 30, 50, 80, 125]
-enMC = [125]
+#enMC = [0.08]
 #lnenMC = np.log10(enMC)
 #zenMC = [0, 18, 26, 32, 37, 41, 46, 50, 53, 57, 60, 63, 67, 70]
 #effMC = [50, 60, 70, 80, 90, 100]
@@ -168,6 +191,9 @@ for (ieff, eff) in enumerate(effMC):
                     Nbinmax=50
                     theta2hist=theta2_bin(theta2f, Nev_perbin, Nbinmax)
                     hist, bin_edges = np.histogram(theta2,theta2hist)
+                    #Me renvois la valeur moyenne en theta2 des evenements stockes dans les bins donc peut etre un peu mieux que de prendre thetabi=(Emin+Emax)/2
+                    theta2bintest, bin_edgestest,a = stats.binned_statistic(theta2,theta2,'mean',theta2hist)
+                    histtest, bin_edgestest,b = stats.binned_statistic(theta2,theta2,'count',theta2hist)
                     PSF=PSFfit.PSFfit(theta2f)
                     s1,s2,s3,A2,A3=PSF.minimization("triplegauss")
                     sig,gam=PSF.minimization("king")
@@ -187,13 +213,21 @@ for (ieff, eff) in enumerate(effMC):
                     #We have to divide by the solid angle of each bin= pi*dO^2 to normalize the histogram
                     bsize = np.diff(bin_edges)*math.pi
                     hist_norm = hist/float(np.sum(hist))/bsize
+                    bsizetest = np.diff(bin_edgestest)*math.pi
+                    hist_normtest = histtest/float(np.sum(histtest))/bsizetest
                     # use gehrels errors for low counts (http://cxc.harvard.edu/sherpa4.4/statistics/)
                     hist_err = (1+np.sqrt(hist+0.75))/float(np.sum(hist))/bsize
-                    test=poisson_conf_interval(hist,"frequentist-confidence")/float(np.sum(hist))/bsize
+                    hist_err2 = (1+np.sqrt(histtest+0.75))/float(np.sum(histtest))/bsizetest
+                    #Erreur prenant en compte poisson du coup j ai des erreurs asymetrics inf et sup
+                    histerr_test=poisson_conf_interval(hist)/float(np.sum(hist))/bsize
                     fitgauss = lambda x : triplegauss(x,s1,s2,s3,A2,A3)
                     fitking = lambda x : king(x,sig,gam)
                     save_fig="plot/triplegauss_fitspsf_run_"+run_number+".jpg"
                     plot_fit_delchi(theta2bin,hist_norm,hist_err,fitgauss,save_fig)
-                    save_fig2="plot/king_fitspsf_run_"+run_number+".jpg"
-                    plot_fit_delchi(theta2bin,hist_norm,hist_err,fitking,save_fig2)
+                    save_fig_scipy="plot/triplegauss_scipy_fitspsf_run_"+run_number+".jpg"
+                    plot_fit_delchi(theta2bintest,hist_normtest,hist_err2,fitgauss,save_fig_scipy)
+                    #save_fig3="plot/triplegauss_poissonianerror_fitspsf_run_"+run_number+".jpg"
+                    #plot_fit_delchi_test(theta2bin,hist_norm,histerr_test,fitgauss,save_fig3)
+                    #save_fig2="plot/king_fitspsf_run_"+run_number+".jpg"
+                    #plot_fit_delchi(theta2bin,hist_norm,hist_err,fitking,save_fig2)
                     
