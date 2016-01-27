@@ -1,4 +1,5 @@
 import numpy as np
+import iminuit
 
 class PSFfit(object):
     
@@ -19,3 +20,38 @@ class PSFfit(object):
         res = - lnlike.sum()
 
         return res
+
+    def nllp_king(self,sig,gam):
+        norm1=2*np.pi*sig**2
+        norm2 = 1-1/gam
+        king=(1+self.theta2/(2*gam*(sig**2)))**(-gam)
+        lnlike = np.log(king) + np.log(norm2)-np.log(norm1)
+        
+        res = - lnlike.sum()
+
+        return res
+
+    def minimization(self, model_func):
+        if(model_func=="triplegauss"):
+            m=iminuit.Minuit(self.nllp_triplegauss, s1=0.02, s2=0.05,s3=0.08, A2=0.3,A3=0.1,
+                                    limit_A2 = (1e-10,10.),limit_A3 = (1e-10,10.),
+                                     limit_s1 = (0.005,0.1), limit_s2 = (0.005,0.2),
+                                     limit_s3 = (0.02,0.5))
+            m.migrad()
+            s1_m=m.values['s1']
+            s2_m=m.values['s2']
+            s3_m=m.values['s3']
+                    
+            s1 = np.min([s1_m,s2_m,s3_m])
+            s2 = np.median([s1_m,s2_m,s3_m])
+            s3 = np.max([s1_m,s2_m,s3_m])
+            return (s1, s2 , s3, m.values['A2'], m.values['A3'])        
+        elif(model_func=="king"):
+            #m=iminuit.Minuit(PSF.nllp_king, sig=0.02, gam=2, limit_sig = (1e-10,10.),limit_gam = (1e-10,10.))
+            m=iminuit.Minuit(self.nllp_king, sig=0.07, gam=1.5, limit_sig = (1e-10,10.),limit_gam = (1e-10,10.))
+            m.migrad()
+            return (m.values['sig'],m.values['gam']) 
+        else:
+            print "Error: Vous n'avez pas donne de fonction..."
+
+        

@@ -3,7 +3,6 @@ import astropy.io.fits as pf
 import matplotlib.pyplot as plt
 import math
 import matplotlib.gridspec as gridspec
-import iminuit
 import FrenchMcBands
 import PSFfit
 plt.ion()
@@ -137,7 +136,8 @@ TableSigma2 = np.zeros((binEMC, binoff, binzen, bineff))
 TableSigma3 = np.zeros((binEMC, binoff, binzen, bineff))
 TableA2 = np.zeros((binEMC, binoff, binzen, bineff))
 TableA3 = np.zeros((binEMC, binoff, binzen, bineff))
-
+TableSig = np.zeros((binEMC, binoff, binzen, bineff))
+TableGam = np.zeros((binEMC, binoff, binzen, bineff))
 
 MCband=FrenchMcBands.FrenchMcBands()
 directory="/Users/jouvin/Desktop/these/WorkGAMMAPI/IRF/PSF"
@@ -165,31 +165,17 @@ for (ieff, eff) in enumerate(effMC):
                     theta2hist=theta2_bin(theta2f, Nev_perbin, Nbinmax)
                     hist, bin_edges = np.histogram(theta2,theta2hist)
                     PSF=PSFfit.PSFfit(theta2f)
-                    m=iminuit.Minuit(PSF.nllp_triplegauss, s1=0.02, s2=0.05,s3=0.08, A2=0.3,A3=0.1,
-                                    limit_A2 = (1e-10,10.),limit_A3 = (1e-10,10.),
-                                     limit_s1 = (0.005,0.1), limit_s2 = (0.005,0.2),
-                                     limit_s3 = (0.02,0.5))
-                    m.migrad()
-                    #Put etre rajouter limit pour king
-                    #m2=iminuit.Minuit(PSF.nllp_king, sig=0.02, gam=2, limit_sig = (1e-10,10.),limit_gam = (1e-10,10.))
-                    m2=iminuit.Minuit(PSF.nllp_king, sig=0.07, gam=1.5, limit_sig = (1e-10,10.),limit_gam = (1e-10,10.))
-                    m2.migrad()
-                    sig=m2.values['sig']
-                    gam=m2.values['gam']
-                    s1_m=m.values['s1']
-                    s2_m=m.values['s2']
-                    s3_m=m.values['s3']
-                    
-                    s1 = np.min([s1_m,s2_m,s3_m])
-                    s2 = np.median([s1_m,s2_m,s3_m])
-                    s3 = np.max([s1_m,s2_m,s3_m])
-                    A2=m.values['A2']
-                    A3=m.values['A3']
+                    s1,s2,s3,A2,A3=PSF.minimization("triplegauss")
+                    sig,gam=PSF.minimization("king")
                     TableSigma1[ien, ioff, izen, ieff] = s1
                     TableSigma2[ien, ioff, izen, ieff] = s2
                     TableSigma3[ien, ioff, izen, ieff] = s3
                     TableA2[ien, ioff, izen, ieff] = A2
                     TableA3[ien, ioff, izen, ieff] = A3
+                    TableSig[ien, ioff, izen, ieff] = sig
+                    TableGam[ien, ioff, izen, ieff] = gam
+                    np.savez("PSF_triplegauss_"+config+".npz", TableSigma1=TableSigma1, TableSigma2=TableSigma2, TableSigma3=TableSigma3, TableA2=TableA2, TableA3=TableA3)
+                    np.savez("PSF_king_"+config+".npz", TableSig=TableSig, TableGam=TableGam)  
                     #If the energy bin are in log, we have to take sqrt(Emin*Emax) for the center of the bin
                     #theta2bin = np.sqrt(bin_edges[:-1] * bin_edges[1:])
                     theta2bin = (bin_edges[:-1] + bin_edges[1:])/2.
@@ -209,5 +195,4 @@ for (ieff, eff) in enumerate(effMC):
                     plot_fit_delchi(theta2bin[i_nonnulle],hist_norm[i_nonnulle],hist_err[i_nonnulle],fitfun2,save_fig2)
                     print "khi2= ", khi2(theta2bin,hist_norm,hist_err,fitfun)
                     #i_sup,List_sup,i_inf,List_inf=bin_contigu(theta2bin,hist_norm,fitfun,1/25.)
-                    np.savez("PSF_"+config+".npz", TableSigma1=TableSigma1, TableSigma2=TableSigma2, TableSigma3=TableSigma3, TableA2=TableA2, TableA3=TableA3)
-                        
+                     
