@@ -25,6 +25,11 @@ def triplegauss(theta2,s1,s2,s3,A2,A3):
     norm =  2*math.pi*(s12+ np.abs(A2) * s22 + np.abs(A3) * s32)
     return y/norm
 
+def king(theta2,sig, gam):
+    norm = (1/(2*np.pi*sig**2))*(1-1/gam)
+    king=(1+theta2/(2*gam*(sig**2)))**(-gam)
+    return norm*king
+
 def bin_contigu(x,data,model_fun, threshold):
     i_sup=np.where(data > model_fun(x))[0]
     i_inf=np.where(data < model_fun(x))[0]
@@ -110,8 +115,8 @@ theta2max=0.3
 MC energy, zenithal angle, offset and efficiency
 """
 #enMC = [0.02, 0.03, 0.05, 0.08, 0.125, 0.2, 0.3, 0.5, 0.8, 1.25, 2, 3, 5, 8, 12.5, 20, 30, 50, 80, 125]
-enMC = [0.08, 0.125, 0.2, 0.3, 0.5, 0.8, 1.25, 2, 3, 5, 8, 12.5, 20, 30, 50, 80, 125]
-#enMC = [0.08]
+#enMC = [0.08, 0.125, 0.2, 0.3, 0.5, 0.8, 1.25, 2, 3, 5, 8, 12.5, 20, 30, 50, 80, 125]
+enMC = [125]
 lnenMC = np.log10(enMC)
 #zenMC = [0, 18, 26, 32, 37, 41, 46, 50, 53, 57, 60, 63, 67, 70]
 #effMC = [50, 60, 70, 80, 90, 100]
@@ -165,7 +170,12 @@ for (ieff, eff) in enumerate(effMC):
                                      limit_s1 = (0.005,0.1), limit_s2 = (0.005,0.2),
                                      limit_s3 = (0.02,0.5))
                     m.migrad()
-                    
+                    #Put etre rajouter limit pour king
+                    #m2=iminuit.Minuit(PSF.nllp_king, sig=0.02, gam=2, limit_sig = (1e-10,10.),limit_gam = (1e-10,10.))
+                    m2=iminuit.Minuit(PSF.nllp_king, sig=0.07, gam=1.5, limit_sig = (1e-10,10.),limit_gam = (1e-10,10.))
+                    m2.migrad()
+                    sig=m2.values['sig']
+                    gam=m2.values['gam']
                     s1_m=m.values['s1']
                     s2_m=m.values['s2']
                     s3_m=m.values['s3']
@@ -192,8 +202,11 @@ for (ieff, eff) in enumerate(effMC):
                     hist_err = (1+np.sqrt(hist+0.75))/float(np.sum(hist))/bsize
                     i_nonnulle=np.where(hist_norm!=0)
                     fitfun = lambda x : triplegauss(x,s1,s2,s3,A2,A3)
-                    save_fig="fitspsf_run_"+run_number+".jpg"
+                    fitfun2 = lambda x : king(x,sig,gam)
+                    save_fig="plot/triplegauss_fitspsf_run_"+run_number+".jpg"
                     plot_fit_delchi(theta2bin[i_nonnulle],hist_norm[i_nonnulle],hist_err[i_nonnulle],fitfun,save_fig)
+                    save_fig2="plot/king_fitspsf_run_"+run_number+".jpg"
+                    plot_fit_delchi(theta2bin[i_nonnulle],hist_norm[i_nonnulle],hist_err[i_nonnulle],fitfun2,save_fig2)
                     print "khi2= ", khi2(theta2bin,hist_norm,hist_err,fitfun)
                     #i_sup,List_sup,i_inf,List_inf=bin_contigu(theta2bin,hist_norm,fitfun,1/25.)
                     np.savez("PSF_"+config+".npz", TableSigma1=TableSigma1, TableSigma2=TableSigma2, TableSigma3=TableSigma3, TableA2=TableA2, TableA3=TableA3)
