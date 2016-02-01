@@ -47,4 +47,17 @@ class FrenchMcBands(object):
         nzen=self.find_zenMC_digit(zen)
         noff=self.find_offMC_digit(off)
         return self.part_type_digit+self.azimuth_digit+nzen+noff+self.energy_type+nen
-    
+    def ener_MC(self, run_number):
+        i=np.where(np.array(self.enMC_digit)==run_number[6:8])
+        return self.enMC[i[0][0]]
+    def zen_MC(self, run_number):
+        i=np.where(np.array(self.zenMC_digit)==run_number[2:4])
+        return self.zenMC[i[0][0]]
+    def off_MC(self, run_number):
+        i=np.where(np.array(self.offMC_digit)==run_number[4])
+        return self.offMC[i[0][0]]
+    def MC_values(self, run_number):
+        E=self.ener_MC(run_number)
+        zen=self.zen_MC(run_number)
+        off=self.off_MC(run_number)
+        print("The run"+run_number+" match with MCs: E="+str(E)+" TeV ,zen="+str(zen)+" deg ,off="+str(off)+" deg")
