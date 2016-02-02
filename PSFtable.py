@@ -67,12 +67,12 @@ def bin_contigu(x,data,model_fun, threshold):
     return i_sup,List_sup,i_inf,List_inf
 
 # Figure definitions
-def khi2(x,data,err,model_fun):
+def khi2(x,data,err,model_fun, N_param_model):
     resid = (data - model_fun(x))**2/err**2
-    khi2=np.sum(resid)/(len(x)-5)
+    khi2=np.sum(resid)/(len(x)-N_param_model)
     return khi2
     
-def plot_fit_delchi(x,data,err,model_fun,save_fig):
+def plot_fit_delchi(x,data,err,model_fun,save_fig, N_param_model):
     fig = plt.figure()
     gs = gridspec.GridSpec(4, 1)
     ax1 = fig.add_subplot(gs[:3,:]) # rows, cols, plot_num.
@@ -81,7 +81,7 @@ def plot_fit_delchi(x,data,err,model_fun,save_fig):
 
     ax1.errorbar(x,data,yerr=err,fmt='o',color='k')
     xmod = np.linspace(np.min(x),np.max(x),10000)
-    KHI2=khi2(x, data, err, model_fun)
+    KHI2=khi2(x, data, err, model_fun, N_param_model)
     line1,=ax1.plot(x,model_fun(x))
     ax1.plot(x,model_fun(x))
     ax1.get_xaxis().set_visible(False)
@@ -94,7 +94,7 @@ def plot_fit_delchi(x,data,err,model_fun,save_fig):
     plt.subplots_adjust(hspace=0.1)
     plt.savefig(save_fig)
 
-def plot_fit_delchi_test(x,data,err,model_fun,save_fig):
+def plot_fit_delchi_test(x,data,err,model_fun,save_fig, N_param_model):
     fig = plt.figure()
     gs = gridspec.GridSpec(4, 1)
     ax1 = fig.add_subplot(gs[:3,:]) # rows, cols, plot_num.
@@ -103,7 +103,7 @@ def plot_fit_delchi_test(x,data,err,model_fun,save_fig):
 
     ax1.errorbar(x,data,yerr=err,fmt='o',color='k')
     xmod = np.linspace(np.min(x),np.max(x),10000)
-    KHI2=khi2(x, data, err, model_fun)
+    KHI2=khi2(x, data, err, model_fun, N_param_model)
     line1,=ax1.plot(x,model_fun(x))
     ax1.plot(x,model_fun(x))
     ax1.get_xaxis().set_visible(False)
@@ -148,7 +148,7 @@ enMC = [0.08, 0.125, 0.2, 0.3, 0.5, 0.8, 1.25, 2, 3, 5, 8, 12.5, 20, 30, 50, 80,
 #effMC = [50, 60, 70, 80, 90, 100]
 #offMC = [0.0, 0.5, 1.0, 1.5, 2.0, 2.5]
 zenMC = [18]
-effMC = [70]
+effMC = [100]
 offMC = [1.0]
 
 binEMC = len(enMC)
@@ -169,6 +169,10 @@ TableGam = np.zeros((binEMC, binoff, binzen, bineff))
 MCband=FrenchMcBands.FrenchMcBands()
 directory="/Users/jouvin/Desktop/these/WorkGAMMAPI/IRF/PSF"
 config="elm_south_stereo"
+file_nosimu = open("file_nosimu.txt", "w")
+file_toofewevents = open("file_toofewevents.txt", "w")
+file_nosimu.write("Runnumber \t E(Tev) \t Zen \t theta \t Eff")
+file_toofewevents.write("Runnumber \t E(Tev) \t Zen \t theta \t Eff \t Number of events") 
 for (ieff, eff) in enumerate(effMC):
         print eff
         for (ioff, off) in enumerate(offMC):
@@ -178,15 +182,34 @@ for (ieff, eff) in enumerate(effMC):
                 for (ien, E) in enumerate(enMC):
                     run_number=MCband.run_number(zen, off, E)
                     print run_number
-                    PSFfile=directory+"/run_"+run_number+"_"+config+"_Prod15_4_eventlist.fits"                    
-                    hdu=pf.open(PSFfile)
-                    print hdu[1].header["MUONEFF"]
-                    print int(hdu[4].header["OBSZEN"])
-                    print hdu[4].header["HIERARCH TARGETOFFSET"]
-                    print str("%.2f"%hdu[4].data["E_MIN"])
+                    #PSFfile=directory+"/run_"+run_number+"_"+config+"_Prod15_4_eventlist.fits"
+                    PSFfile=directory+"/run_"+run_number+"_Eff"+str(eff)+"_psf.fits"
+                    try: 
+                        hdu=pf.open(PSFfile)
+                        
+                    except:
+                        print("Cannot open file: " + PSFfile)
+                        print("skipping run")
+                        E=MCband.ener_MC(run_number)
+                        zen=MCband.zen_MC(run_number)
+                        off=MCband.off_MC(run_number)
+                        file_nosimu.write(run_number+"\t"+str(E)+"\t"+str(zen)+"\t"+str(off)+"\t"+str(eff)+"\n") 
+                        continue
+                    
+                    #print hdu[1].header["MUONEFF"]
+                    #print int(hdu[4].header["OBSZEN"])
+                    #print hdu[4].header["HIERARCH TARGETOFFSET"]
+                    #print str("%.2f"%hdu[4].data["E_MIN"])
                     theta2 = hdu[1].data["MC_ThSq"]
                     index = [theta2<theta2max]
                     theta2f = theta2[index]
+                    if(len(theta2f)<20):
+                        E=MCband.ener_MC(run_number)
+                        zen=MCband.zen_MC(run_number)
+                        off=MCband.off_MC(run_number)
+                        file_toofewevents.write(run_number+"\t"+str(E)+"\t"+str(zen)+"\t"+str(off)+"\t"+str(eff)+"\t"+str(len(theta2f))+"\n") 
+                        continue
+                    
                     Nev_perbin=10
                     Nbinmax=50
                     theta2hist=theta2_bin(theta2f, Nev_perbin, Nbinmax)
@@ -223,11 +246,13 @@ for (ieff, eff) in enumerate(effMC):
                     fitgauss = lambda x : triplegauss(x,s1,s2,s3,A2,A3)
                     fitking = lambda x : king(x,sig,gam)
                     save_fig="plot/triplegauss_fitspsf_run_"+run_number+".jpg"
-                    plot_fit_delchi(theta2bin,hist_norm,hist_err,fitgauss,save_fig)
-                    save_fig_scipy="plot/triplegauss_scipy_fitspsf_run_"+run_number+".jpg"
-                    plot_fit_delchi(theta2bintest,hist_normtest,hist_err2,fitgauss,save_fig_scipy)
+                    plot_fit_delchi(theta2bin,hist_norm,hist_err,fitgauss,save_fig, 5)
+                    #save_fig_scipy="plot/triplegauss_fitspsf_run_"+run_number+".jpg"
+                    #plot_fit_delchi(theta2bintest,hist_normtest,hist_err2,fitgauss,save_fig_scipy,5)
                     #save_fig3="plot/triplegauss_poissonianerror_fitspsf_run_"+run_number+".jpg"
-                    #plot_fit_delchi_test(theta2bin,hist_norm,histerr_test,fitgauss,save_fig3)
-                    #save_fig2="plot/king_fitspsf_run_"+run_number+".jpg"
-                    #plot_fit_delchi(theta2bin,hist_norm,hist_err,fitking,save_fig2)
+                    #plot_fit_delchi_test(theta2bin,hist_norm,histerr_test,fitgauss,save_fig3,5)
+                    save_fig2="plot/king_fitspsf_run_"+run_number+".jpg"
+                    plot_fit_delchi(theta2bin,hist_norm,hist_err,fitking,save_fig2, 2)
                     
+file_toofewevents.close()
+file_nosimu.close()
