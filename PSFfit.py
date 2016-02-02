@@ -31,9 +31,9 @@ class PSFfit(object):
 
         return res
 
-    def minimization(self, model_func):
+    def minimization(self, model_func, s1_init=0.02, s2_init=0.05,s3_init=0.08, A2_init=0.3,A3_init=0.1):
         if(model_func=="triplegauss"):
-            m=iminuit.Minuit(self.nllp_triplegauss, s1=0.02, s2=0.05,s3=0.08, A2=0.3,A3=0.1,
+            m=iminuit.Minuit(self.nllp_triplegauss, s1=s1_init, s2=s2_init,s3=s3_init, A2=A2_init,A3=A3_init,
                                     limit_A2 = (1e-10,10.),limit_A3 = (1e-10,10.),
                                      limit_s1 = (0.005,0.1), limit_s2 = (0.005,0.2),
                                      limit_s3 = (0.02,0.5))
