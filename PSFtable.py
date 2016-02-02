@@ -299,9 +299,9 @@ for (ieff, eff) in enumerate(effMC):
                     Int_fitgauss = lambda x1,x2 : Integral_triplegauss(x1,x2,s1,s2,s3,A2,A3)
                     
                     #fitking = lambda x : king(x,sig,gam)
-                    save_fig="plot2/triplegauss_fitspsf_run_"+run_number+".jpg"
+                    save_fig="plot2/triplegauss_fitspsf_run_"+run_number+"_eff_"+str(eff)+".jpg"
                     plot_fit_delchi(theta2bin,hist_norm,hist_err,fitgauss,save_fig)
-                    save_fig_int="plot2/INT_triplegauss_fitspsf_run_"+run_number+".jpg"
+                    save_fig_int="plot2/INT_triplegauss_fitspsf_run_"+run_number+"_eff_"+str(eff)+".jpg"
                     thetamin=np.sqrt(bin_edges[:-1])
                     thetamax=np.sqrt(bin_edges[1:])
                     #plot_fit_delchi_int(theta2bin,hist_norm,hist_err,Int_fitgauss (thetamin,thetamax) ,save_fig)
