@@ -27,18 +27,19 @@ def triplegauss(theta2,s1,s2,s3,A2,A3):
     norm =  2*math.pi*(s12+ np.abs(A2) * s22 + np.abs(A3) * s32)
     return y/norm
 
-def Integral_triplegauss(theta1,theta2,s1,s2,s3,A2,A3):
+def Integral_triplegauss(theta2min,theta2max,s1,s2,s3,A2,A3):
     s12 = s1*s1
     s22 = s2*s2
     s32 = s3*s3
     
-    gaus1 = erf(theta2/(np.sqrt(2)*s1))-erf(theta1/(np.sqrt(2)*s1))
-    gaus2 = erf(theta2/(np.sqrt(2)*s2))-erf(theta1/(np.sqrt(2)*s2))
-    gaus3 = erf(theta2/(np.sqrt(2)*s3))-erf(theta1/(np.sqrt(2)*s3))
+    gaus1 = np.exp(-theta2min/(2*s12))-np.exp(-theta2max/(2*s12))
+    gaus2 = np.exp(-theta2min/(2*s22))-np.exp(-theta2max/(2*s22))
+    gaus3 = np.exp(-theta2min/(2*s32))-np.exp(-theta2max/(2*s32))
 
-    y = np.sqrt(math.pi/2)*(gaus1 + A2*s2*gaus2 + A3*s3*gaus3) 
+    y = 2*math.pi*(s12*gaus1 + A2*s22*gaus2 + A3*s32*gaus3) 
     norm =  2*math.pi*(s12+ np.abs(A2) * s22 + np.abs(A3) * s32)
     return y/norm
+
 
 def king(theta2,sig, gam):
     norm = (1/(2*np.pi*sig**2))*(1-1/gam)
@@ -113,7 +114,10 @@ def plot_fit_delchi(x,data,err,model_fun,save_fig):
     plt.subplots_adjust(hspace=0.1)
     plt.savefig(save_fig)
 
-def plot_fit_delchi_int(x,data,err,model_fun,save_fig):
+def plot_fit_delchi_int(x,data,err,model_fun,save_fig, run_number, MC_band, eff):
+    E=MCband.ener_MC(run_number)
+    zen=MCband.zen_MC(run_number)
+    off=MCband.off_MC(run_number)
     fig = plt.figure()
     gs = gridspec.GridSpec(4, 1)
     ax1 = fig.add_subplot(gs[:3,:]) # rows, cols, plot_num.
@@ -127,7 +131,7 @@ def plot_fit_delchi_int(x,data,err,model_fun,save_fig):
     ax1.plot(x,model_fun)
     ax1.get_xaxis().set_visible(False)
     plt.legend([line1], ["khi2= "+str("%.2f"%KHI2)])
-
+    plt.title("Run number: "+run_number+" (zen= "+str(zen)+" deg , eff= "+str(eff)+" ,off= "+str(off)+" deg and E= "+str(E)+" TeV)", size=13)
     ax2 = fig.add_subplot(gs[3,:],sharex=ax1) 
     ax2.plot(xmod,np.zeros_like(xmod),color='k')
     resid = (data - model_fun)/err
@@ -182,15 +186,15 @@ theta2max=0.3
 MC energy, zenithal angle, offset and efficiency
 """
 #enMC = [0.02, 0.03, 0.05, 0.08, 0.125, 0.2, 0.3, 0.5, 0.8, 1.25, 2, 3, 5, 8, 12.5, 20, 30, 50, 80, 125]
-enMC = [0.08, 0.125, 0.2, 0.3, 0.5, 0.8, 1.25, 2, 3, 5, 8, 12.5, 20, 30, 50, 80, 125]
+#enMC = [0.08, 0.125, 0.2, 0.3, 0.5, 0.8, 1.25, 2, 3, 5, 8, 12.5, 20, 30, 50, 80, 125]
 #enMC = [0.08, 0.5, 0.8,0.125, 1.25, 80, 125]
-#enMC = [0.125]
+enMC = [0.125]
 #lnenMC = np.log10(enMC)
 #zenMC = [0, 18, 26, 32, 37, 41, 46, 50, 53, 57, 60, 63, 67, 70]
 #effMC = [50, 60, 70, 80, 90, 100]
 #offMC = [0.0, 0.5, 1.0, 1.5, 2.0, 2.5]
-zenMC = [0, 18]
-#zenMC = [0]
+#zenMC = [0, 18]
+zenMC = [0]
 effMC = [100]
 offMC = [1.0]
 
@@ -266,11 +270,11 @@ for (ieff, eff) in enumerate(effMC):
                     histtest, bin_edgestest,b = stats.binned_statistic(theta2,theta2,'count',theta2hist)
                     PSF=PSFfit.PSFfit(theta2f)
                     s1,s2,s3,A2,A3=PSF.minimization("triplegauss",s1_init, s2_init, s3_init, A2_init, A3_init)
-                    s1_init=s1
-                    s2_init=s2
-                    s3_init=s3
-                    A2_init=A2
-                    A3_init=A3
+                    #s1_init=s1
+                    #s2_init=s2
+                    #s3_init=s3
+                    #A2_init=A2
+                    #A3_init=A3
                     #sig,gam=PSF.minimization("king")
                     TableSigma1[ien, ioff, izen, ieff] = s1
                     TableSigma2[ien, ioff, izen, ieff] = s2
@@ -295,23 +299,21 @@ for (ieff, eff) in enumerate(effMC):
                     hist_err2 = (1+np.sqrt(histtest+0.75))/float(np.sum(histtest))/bsizetest
                     #Erreur prenant en compte poisson du coup j ai des erreurs asymetrics inf et sup
                     histerr_test=poisson_conf_interval(hist)/float(np.sum(hist))/bsize
-                    fitgauss = lambda x : triplegauss(x,s1,s2,s3,A2,A3)
+                    #fitgauss = lambda x : triplegauss(x,s1,s2,s3,A2,A3)
                     Int_fitgauss = lambda x1,x2 : Integral_triplegauss(x1,x2,s1,s2,s3,A2,A3)
                     
                     #fitking = lambda x : king(x,sig,gam)
-                    save_fig="plot2/triplegauss_fitspsf_run_"+run_number+"_eff_"+str(eff)+".jpg"
-                    plot_fit_delchi(theta2bin,hist_norm,hist_err,fitgauss,save_fig)
+                    #save_fig="plot2/triplegauss_fitspsf_run_"+run_number+"_eff_"+str(eff)+".jpg"
+                    #plot_fit_delchi(theta2bin,hist_norm,hist_err,fitgauss,save_fig)
                     save_fig_int="plot2/INT_triplegauss_fitspsf_run_"+run_number+"_eff_"+str(eff)+".jpg"
-                    thetamin=np.sqrt(bin_edges[:-1])
-                    thetamax=np.sqrt(bin_edges[1:])
-                    #plot_fit_delchi_int(theta2bin,hist_norm,hist_err,Int_fitgauss (thetamin,thetamax) ,save_fig)
+                    plot_fit_delchi_int(theta2bin,hist_norm,hist_err,Int_fitgauss (bin_edges[:-1],bin_edges[1:])/(bsize) ,save_fig_int, run_number, MCband, eff)
                     #save_fig_scipy="plot/triplegauss_fitspsf_run_"+run_number+".jpg"
                     #plot_fit_delchi(theta2bintest,hist_normtest,hist_err2,fitgauss,save_fig_scipy,5)
                     #save_fig3="plot/triplegauss_poissonianerror_fitspsf_run_"+run_number+".jpg"
                     #plot_fit_delchi_test(theta2bin,hist_norm,histerr_test,fitgauss,save_fig3,5)
                     #save_fig2="plot/king_fitspsf_run_"+run_number+".jpg"
                     #plot_fit_delchi(theta2bin,hist_norm,hist_err,fitking,save_fig2, 2)
-                    test_gauss=bin_contigu(theta2bin,hist_norm,fitgauss, 1/3.)
+                    #test_gauss=bin_contigu(theta2bin,hist_norm,fitgauss, 1/3.)
                     #test_king=bin_contigu(theta2bin,hist_norm,fitking, 1/3.)
 file_toofewevents.close()
 file_nosimu.close()
