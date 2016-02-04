@@ -70,6 +70,7 @@ def containment_radius_tripplegauss(containment_fraction,s1,s2,s3,A2,A3):
         # Expand until we really find a theta_max
     while f(theta_max) < 0:
         theta_max *= 2
+    #brentq: regarde la ou la fonction f s annule donc la ou c'est egale a 0.68 de containment
     return brentq(f, a=0, b=theta_max)
                 
     
@@ -171,7 +172,7 @@ def plot_fit_delchi_int(x,data,err,model_fun,save_fig, E, zen, off, eff, pdf):
     
 def plot_khi2(E ,khi2, pdf):
     fig = plt.figure()
-    plt.plot(E, khi2, "o")
+    plt.semilogx(E, khi2, "o")
     plt.ylabel("khi2")
     plt.xlabel("E (TeV)")
     plt.axhline(y=2, color='red',linewidth=4)
@@ -180,7 +181,7 @@ def plot_khi2(E ,khi2, pdf):
 
 def plot_R68(E , R68, pdf):
     fig = plt.figure()
-    plt.plot(E, R68, "o")
+    plt.semilogx(E, R68, "o")
     plt.ylabel("R68")
     plt.xlabel("E (TeV)")
     plt.title("R68 evolution with MC energy")
@@ -212,17 +213,22 @@ theta2max=0.3
 MC energy, zenithal angle, offset and efficiency
 """
 #enMC = [0.02, 0.03, 0.05, 0.08, 0.125, 0.2, 0.3, 0.5, 0.8, 1.25, 2, 3, 5, 8, 12.5, 20, 30, 50, 80, 125]
-#enMC = [0.08, 0.125, 0.2, 0.3, 0.5, 0.8, 1.25, 2, 3, 5, 8, 12.5, 20, 30, 50, 80, 125]
-enMC = [0.08, 0.5, 0.8,0.125, 1.25, 80, 125]
+enMC = [0.08, 0.125, 0.2, 0.3, 0.5, 0.8, 1.25, 2, 3, 5, 8, 12.5, 20, 30, 50, 80, 125]
+#enMC = [0.08, 0.5, 0.8,0.125, 1.25, 80, 125]
 #enMC = [0.125]
 #lnenMC = np.log10(enMC)
 #zenMC = [0, 18, 26, 32, 37, 41, 46, 50, 53, 57, 60, 63, 67, 70]
+zenMC = [0, 26, 37, 46, 53, 60, 67]
 #effMC = [50, 60, 70, 80, 90, 100]
+effMC = [60, 80, 100]
+#effMC = [60, 100]
 #offMC = [0.0, 0.5, 1.0, 1.5, 2.0, 2.5]
-zenMC = [0, 18]
+offMC = [0.5, 1.5, 2.5]
+#offMC = [1.0, 1.5]
+#zenMC = [0, 18]
 #zenMC = [0]
-effMC = [100]
-offMC = [1.0]
+#effMC = [100]
+#offMC = [1.0]
 
 binEMC = len(enMC)
 binzen = len(zenMC)
@@ -242,9 +248,9 @@ TableGam = np.zeros((binEMC, binoff, binzen, bineff))
 MCband=FrenchMcBands.FrenchMcBands()
 directory="/Users/jouvin/Desktop/these/WorkGAMMAPI/IRF/PSF"
 config="elm_south_stereo"
-file_nosimu = open("file_nosimu.txt", "w")
-file_toofewevents = open("file_toofewevents.txt", "w")
-file_khi2toohigh = open("file_khi2sup2.txt", "w")
+file_nosimu = open("plot2/file_nosimu.txt", "w")
+file_toofewevents = open("plot2/file_toofewevents.txt", "w")
+file_khi2toohigh = open("plot2/file_khi2sup2.txt", "w")
 file_nosimu.write("Runnumber \t E(Tev) \t Zen \t theta \t Eff \n")
 file_toofewevents.write("Runnumber \t E(Tev) \t Zen \t theta \t Eff \t Number of events \n")
 file_khi2toohigh.write("Runnumber \t E(Tev) \t Zen \t theta \t Eff \t Number of events \t khi2 \n")
@@ -284,7 +290,7 @@ for (ieff, eff) in enumerate(effMC):
                         theta2 = hdu[1].data["MC_ThSq"]
                         index = [theta2<theta2max]
                         theta2f = theta2[index]
-                        if(len(theta2f)<20):
+                        if(len(theta2f)<30):
                             file_toofewevents.write(run_number+"\t"+str(E)+"\t"+str(zen)+"\t"+str(off)+"\t"+str(eff)+"\t"+str(len(theta2f))+"\n") 
                             continue
                         Nev_perbin=10
@@ -340,8 +346,9 @@ for (ieff, eff) in enumerate(effMC):
                         khi2_list.append(KHI2)
                         R68=containment_radius_tripplegauss(0.68,s1,s2,s3,A2,A3)
                         R68_list.append(R68)
-                    plot_khi2(Eok_list , khi2_list, pdf)
-                    plot_R68(Eok_list , R68_list, pdf)
+                    if(len(Eok_list)!=0):    
+                        plot_khi2(Eok_list , khi2_list, pdf)
+                        plot_R68(Eok_list , R68_list, pdf)
                         #save_fig_scipy="plot/triplegauss_fitspsf_run_"+run_number+".jpg"
                         #plot_fit_delchi(theta2bintest,hist_normtest,hist_err2,fitgauss,save_fig_scipy,5)
                         #save_fig3="plot/triplegauss_poissonianerror_fitspsf_run_"+run_number+".jpg"
