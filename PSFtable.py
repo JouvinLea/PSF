@@ -73,7 +73,13 @@ def containment_radius_tripplegauss(containment_fraction,s1,s2,s3,A2,A3):
     #brentq: regarde la ou la fonction f s annule donc la ou c'est egale a 0.68 de containment
     return brentq(f, a=0, b=theta_max)
                 
-    
+def R68_Regis(s1,s2,s3,A2,A3):
+    x=np.linspace(0,0.3,3000)
+    y=triplegauss(x,s1,s2,s3,A2,A3)
+    res= y.cumsum()/y.sum()
+    s68=np.sqrt(x[np.where(res>=0.68)[0][0]])
+    return s68
+
 def king(theta2,sig, gam):
     norm = (1/(2*np.pi*sig**2))*(1-1/gam)
     king=(1+theta2/(2*gam*(sig**2)))**(-gam)
@@ -147,7 +153,7 @@ def plot_fit_delchi(x,data,err,model_fun,save_fig):
     plt.subplots_adjust(hspace=0.1)
     plt.savefig(save_fig)
 
-def plot_fit_delchi_int(x,data,err,model_fun,save_fig, E, zen, off, eff, pdf):
+def plot_fit_delchi_int(x,data,err,model_fun,save_fig, E, zen, off, eff, pdf, s1, s2, s3):
     fig = plt.figure()
     gs = gridspec.GridSpec(4, 1)
     ax1 = fig.add_subplot(gs[:3,:]) # rows, cols, plot_num.
@@ -160,7 +166,7 @@ def plot_fit_delchi_int(x,data,err,model_fun,save_fig, E, zen, off, eff, pdf):
     line1,=ax1.plot(x,model_fun)
     ax1.plot(x,model_fun)
     ax1.get_xaxis().set_visible(False)
-    plt.legend([line1], ["khi2= "+str("%.2f"%KHI2)])
+    plt.legend([line1], ["khi2= "+str("%.2f"%KHI2)+"  \n s1= "+str("%.3f"%s1)+" \n s2= "+str("%.3f"%s2)+" \n s3= "+str("%.3f"%s3)])
     plt.title("Run number: "+run_number+" (zen= "+str(zen)+" deg , eff= "+str(eff)+" ,off= "+str(off)+" deg and E= "+str(E)+" TeV)", size=13)
     ax2 = fig.add_subplot(gs[3,:],sharex=ax1) 
     ax2.plot(xmod,np.zeros_like(xmod),color='k')
@@ -186,8 +192,27 @@ def plot_R68(E , R68, pdf):
     plt.xlabel("E (TeV)")
     plt.title("R68 evolution with MC energy")
     pdf.savefig()
+
+def plot_sigma(E , s1, s2, s3, pdf):
+    fig = plt.figure()
+    plt.semilogx(E, s1, "o", label= "s1")
+    plt.semilogx(E, s2, "o", label= "s2")
+    plt.semilogx(E, s3, "o", label= "s3")
+    plt.ylabel("sigma (deg)")
+    plt.xlabel("E (TeV)")
+    plt.legend()
+    plt.title("sigma evolution with MC energy")
+    pdf.savefig()
        
-    
+def plot_sigma3(E , s3, pdf):
+    fig = plt.figure()
+    plt.semilogx(E, s3, "o")
+    plt.ylabel("sigma3 (deg)")
+    plt.xlabel("E (TeV)")
+    plt.legend()
+    plt.title("sigma3 evolution with MC energy")
+    pdf.savefig()
+       
 def theta2_bin(data, Nev_bin, Nbinmax):
     """
     Define an adaptative theta2binning in order to have at least 10 evnts per bin
@@ -213,22 +238,22 @@ theta2max=0.3
 MC energy, zenithal angle, offset and efficiency
 """
 #enMC = [0.02, 0.03, 0.05, 0.08, 0.125, 0.2, 0.3, 0.5, 0.8, 1.25, 2, 3, 5, 8, 12.5, 20, 30, 50, 80, 125]
-enMC = [0.08, 0.125, 0.2, 0.3, 0.5, 0.8, 1.25, 2, 3, 5, 8, 12.5, 20, 30, 50, 80, 125]
+#enMC = [0.08, 0.125, 0.2, 0.3, 0.5, 0.8, 1.25, 2, 3, 5, 8, 12.5, 20, 30, 50, 80, 125]
 #enMC = [0.08, 0.5, 0.8,0.125, 1.25, 80, 125]
-#enMC = [0.125]
+enMC = [0.125]
 #lnenMC = np.log10(enMC)
 #zenMC = [0, 18, 26, 32, 37, 41, 46, 50, 53, 57, 60, 63, 67, 70]
-zenMC = [0, 26, 37, 46, 53, 60, 67]
+#zenMC = [0, 26, 37, 46, 53, 60, 67]
 #effMC = [50, 60, 70, 80, 90, 100]
-effMC = [60, 80, 100]
+#effMC = [60, 80, 100]
 #effMC = [60, 100]
 #offMC = [0.0, 0.5, 1.0, 1.5, 2.0, 2.5]
-offMC = [0.5, 1.5, 2.5]
+#offMC = [0.5, 1.5, 2.5]
 #offMC = [1.0, 1.5]
 #zenMC = [0, 18]
-#zenMC = [0]
-#effMC = [100]
-#offMC = [1.0]
+zenMC = [0]
+effMC = [100]
+offMC = [1.0]
 
 binEMC = len(enMC)
 binzen = len(zenMC)
@@ -268,6 +293,9 @@ for (ieff, eff) in enumerate(effMC):
                 khi2_list=[]
                 Eok_list=[]
                 R68_list=[]
+                s1_list=[]
+                s2_list=[]
+                s3_list=[]
                 with PdfPages('plot2/zen_'+str(zen)+'_eff_'+str(eff)+'_off_'+str(off)+'.pdf') as pdf:
                     for (ien, E) in enumerate(enMC):
                         run_number=MCband.run_number(zen, off, E)
@@ -338,17 +366,23 @@ for (ieff, eff) in enumerate(effMC):
                         #save_fig="plot2/triplegauss_fitspsf_run_"+run_number+"_eff_"+str(eff)+".jpg"
                         #plot_fit_delchi(theta2bin,hist_norm,hist_err,fitgauss,save_fig)
                         save_fig_int="plot2/INT_triplegauss_fitspsf_run_"+run_number+"_eff_"+str(eff)+".jpg"
-                        plot_fit_delchi_int(theta2bin,hist_norm,hist_err,Int_fitgauss (bin_edges[:-1],bin_edges[1:])/(bsize) ,save_fig_int, E, zen, off, eff, pdf)
+                        plot_fit_delchi_int(theta2bin,hist_norm,hist_err,Int_fitgauss (bin_edges[:-1],bin_edges[1:])/(bsize) ,save_fig_int, E, zen, off, eff, pdf, s1, s2, s3)
                         KHI2=khi2_int(theta2bin,hist_norm,hist_err,Int_fitgauss (bin_edges[:-1],bin_edges[1:])/(bsize))
                         if(KHI2 > 2):
                             file_khi2toohigh.write(run_number+"\t"+str(E)+"\t"+str(zen)+"\t"+str(off)+"\t"+str(eff)+"\t"+str(len(theta2f))+"\t"+str(KHI2)+"\n") 
                         Eok_list.append(E)    
                         khi2_list.append(KHI2)
                         R68=containment_radius_tripplegauss(0.68,s1,s2,s3,A2,A3)
+                        R68regis=R68_Regis(s1,s2,s3,A2,A3)
                         R68_list.append(R68)
+                        s1_list.append(s1)
+                        s2_list.append(s2)
+                        s3_list.append(s3)
                     if(len(Eok_list)!=0):    
                         plot_khi2(Eok_list , khi2_list, pdf)
                         plot_R68(Eok_list , R68_list, pdf)
+                        plot_sigma3(Eok_list , s3_list, pdf)
+                        plot_sigma(Eok_list , s1_list, s2_list, s3_list, pdf)
                         #save_fig_scipy="plot/triplegauss_fitspsf_run_"+run_number+".jpg"
                         #plot_fit_delchi(theta2bintest,hist_normtest,hist_err2,fitgauss,save_fig_scipy,5)
                         #save_fig3="plot/triplegauss_poissonianerror_fitspsf_run_"+run_number+".jpg"
