@@ -77,7 +77,8 @@ def R68_Regis(s1,s2,s3,A2,A3):
     x=np.linspace(0,0.3,3000)
     y=triplegauss(x,s1,s2,s3,A2,A3)
     res= y.cumsum()/y.sum()
-    s68=np.sqrt(x[np.where(res>=0.68)[0][0]])
+    ind_R68=np.where(res>=0.68)[0][0]
+    s68=np.sqrt(0.5*(x[ind_R68]+x[ind_R68-1]))
     return s68
 
 def king(theta2,sig, gam):
@@ -237,23 +238,23 @@ theta2max=0.3
 """
 MC energy, zenithal angle, offset and efficiency
 """
-#enMC = [0.02, 0.03, 0.05, 0.08, 0.125, 0.2, 0.3, 0.5, 0.8, 1.25, 2, 3, 5, 8, 12.5, 20, 30, 50, 80, 125]
+enMC = [0.02, 0.03, 0.05, 0.08, 0.125, 0.2, 0.3, 0.5, 0.8, 1.25, 2, 3, 5, 8, 12.5, 20, 30, 50, 80, 125]
 #enMC = [0.08, 0.125, 0.2, 0.3, 0.5, 0.8, 1.25, 2, 3, 5, 8, 12.5, 20, 30, 50, 80, 125]
 #enMC = [0.08, 0.5, 0.8,0.125, 1.25, 80, 125]
-enMC = [0.125]
+#enMC = [0.125]
 #lnenMC = np.log10(enMC)
 #zenMC = [0, 18, 26, 32, 37, 41, 46, 50, 53, 57, 60, 63, 67, 70]
-#zenMC = [0, 26, 37, 46, 53, 60, 67]
+zenMC = [0, 26, 37, 46, 53, 60, 67]
 #effMC = [50, 60, 70, 80, 90, 100]
-#effMC = [60, 80, 100]
+effMC = [60, 80, 100]
 #effMC = [60, 100]
 #offMC = [0.0, 0.5, 1.0, 1.5, 2.0, 2.5]
-#offMC = [0.5, 1.5, 2.5]
+offMC = [0.5, 1.5, 2.5]
 #offMC = [1.0, 1.5]
 #zenMC = [0, 18]
-zenMC = [0]
-effMC = [100]
-offMC = [1.0]
+#zenMC = [0]
+#effMC = [100]
+#offMC = [1.0]
 
 binEMC = len(enMC)
 binzen = len(zenMC)
@@ -372,8 +373,8 @@ for (ieff, eff) in enumerate(effMC):
                             file_khi2toohigh.write(run_number+"\t"+str(E)+"\t"+str(zen)+"\t"+str(off)+"\t"+str(eff)+"\t"+str(len(theta2f))+"\t"+str(KHI2)+"\n") 
                         Eok_list.append(E)    
                         khi2_list.append(KHI2)
-                        R68=containment_radius_tripplegauss(0.68,s1,s2,s3,A2,A3)
-                        R68regis=R68_Regis(s1,s2,s3,A2,A3)
+                        #R68=containment_radius_tripplegauss(0.68,s1,s2,s3,A2,A3)
+                        R68=R68_Regis(s1,s2,s3,A2,A3)
                         R68_list.append(R68)
                         s1_list.append(s1)
                         s2_list.append(s2)
