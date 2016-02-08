@@ -319,7 +319,7 @@ for (ieff, eff) in enumerate(effMC):
                         theta2 = hdu[1].data["MC_ThSq"]
                         index = [theta2<theta2max]
                         theta2f = theta2[index]
-                        if(len(theta2f)<30):
+                        if(len(theta2f)<40):
                             file_toofewevents.write(run_number+"\t"+str(E)+"\t"+str(zen)+"\t"+str(off)+"\t"+str(eff)+"\t"+str(len(theta2f))+"\n") 
                             continue
                         Nev_perbin=10
