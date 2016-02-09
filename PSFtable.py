@@ -49,6 +49,15 @@ def R68(s1,s2,s3,A2,A3):
     s68=np.sqrt(0.5*(x[ind_R68]+x[ind_R68-1]))
     return s68
 
+def R68_hist(theta2):
+    Nvalue=len(theta2)
+    theta2_sorted=np.sort(theta2)
+    #res= data.cumsum()/data.sum()
+    ind_R68=int(0.68*Nvalue)
+    s68=np.sqrt(0.5*(theta2_sorted[ind_R68]+theta2_sorted[ind_R68-1]))
+    #import IPython; IPython.embed()
+    return s68
+
 def king(theta2,sig, gam):
     norm = (1/(2*np.pi*sig**2))*(1-1/gam)
     king=(1+theta2/(2*gam*(sig**2)))**(-gam)
@@ -154,14 +163,26 @@ def plot_khi2(E ,khi2, pdf):
     plt.title("khi2 evolution with MC energy")
     pdf.savefig()
 
-def plot_R68(E , R68, pdf):
+def plot_R68(E , R68fit, R68data, pdf):
     fig = plt.figure()
-    plt.semilogx(E, R68, "o")
-    plt.ylabel("R68")
-    plt.xlabel("E (TeV)")
-    plt.title("R68 evolution with MC energy")
+    gs = gridspec.GridSpec(4, 1)
+    ax1 = fig.add_subplot(gs[:3,:]) # rows, cols, plot_num.
+    ax1.set_xscale("log", nonposx='clip')
+    line1,=ax1.plot(E, R68fit, "o", label=" fit ")
+    line2,=ax1.semilogx(E, R68data, "o", label=" data ")
+    #xmod = np.linspace(np.min(x),np.max(x),10000)
+    ax1.get_xaxis().set_visible(False)
+    plt.legend([line1,line2], ["fit","data"])
+    ax2 = fig.add_subplot(gs[3,:],sharex=ax1)
+    ax2.set_xscale("log", nonposx='clip')
+    resid=(np.asarray(R68data)-np.asarray(R68fit))/np.asarray(R68fit)
+    ax2.plot(E,resid,"+",color='r', markersize=5)
+    ax2.set_ylabel("(data-fit)/fit)")
+    ax2.set_xlabel("E (TeV)")
+    plt.subplots_adjust(hspace=0.1)
     pdf.savefig()
 
+    
 def plot_sigma(E , s1, s2, s3, pdf):
     fig = plt.figure()
     plt.semilogx(E, s1, "o", label= "s1")
@@ -211,13 +232,13 @@ enMC = [0.02, 0.03, 0.05, 0.08, 0.125, 0.2, 0.3, 0.5, 0.8, 1.25, 2, 3, 5, 8, 12.
 #enMC = [0.08, 0.5, 0.8,0.125, 1.25, 80, 125]
 #enMC = [0.125]
 #lnenMC = np.log10(enMC)
-zenMC = [0, 18, 26, 32, 37, 41, 46, 50, 53, 57, 60, 63, 67, 70]
-#zenMC = [0, 26, 37, 46, 53, 60, 67]
-effMC = [50, 60, 70, 80, 90, 100]
-#effMC = [50, 60, 80, 100]
+#zenMC = [0, 18, 26, 32, 37, 41, 46, 50, 53, 57, 60, 63, 67, 70]
+zenMC = [0, 26, 37, 46, 53, 60, 67]
+#effMC = [50, 60, 70, 80, 90, 100]
+effMC = [50, 60, 80, 100]
 #effMC = [60, 100]
-offMC = [0.0, 0.5, 1.0, 1.5, 2.0, 2.5]
-#offMC = [0.5, 1.5, 2.5]
+#offMC = [0.0, 0.5, 1.0, 1.5, 2.0, 2.5]
+offMC = [0.5, 1.5, 2.5]
 #offMC = [1.0, 1.5]
 #zenMC = [0, 18]
 #zenMC = [0]
@@ -261,7 +282,8 @@ for (ieff, eff) in enumerate(effMC):
                 A3_init=0.1
                 khi2_list=[]
                 Eok_list=[]
-                R68_list=[]
+                R68fit_list=[]
+                R68data_list=[]
                 s1_list=[]
                 s2_list=[]
                 s3_list=[]
@@ -344,23 +366,25 @@ for (ieff, eff) in enumerate(effMC):
                         #fitking = lambda x : king(x,sig,gam)
                         #save_fig="plot2/triplegauss_fitspsf_run_"+run_number+"_eff_"+str(eff)+".jpg"
                         #plot_fit_delchi(theta2bin,hist_norm,hist_err,fitgauss,save_fig)
-                        #save_fig_int="plot2/INT_triplegauss_fitspsf_run_"+run_number+"_eff_"+str(eff)+".jpg"
-                        #plot_fit_delchi_int(theta2bin,hist_norm,hist_err,Int_fitgauss (bin_edges[:-1],bin_edges[1:])/(bsize) ,save_fig_int, E, zen, off, eff, pdf, s1, s2, s3)
+                        save_fig_int="plot2/INT_triplegauss_fitspsf_run_"+run_number+"_eff_"+str(eff)+".jpg"
+                        plot_fit_delchi_int(theta2bin,hist_norm,hist_err,Int_fitgauss (bin_edges[:-1],bin_edges[1:])/(bsize) ,save_fig_int, E, zen, off, eff, pdf, s1, s2, s3)
                         KHI2=khi2_int(theta2bin,hist_norm,hist_err,Int_fitgauss (bin_edges[:-1],bin_edges[1:])/(bsize))
                         if(KHI2 > 2):
                             file_khi2toohigh.write(run_number+"\t"+str(E)+"\t"+str(zen)+"\t"+str(off)+"\t"+str(eff)+"\t"+str(len(theta2f))+"\t"+str(KHI2)+"\n") 
                         Eok_list.append(E)    
                         khi2_list.append(KHI2)
-                        R68=R68(s1,s2,s3,A2,A3)
-                        R68_list.append(R68)
+                        R68fit=R68(s1,s2,s3,A2,A3)
+                        R68data=R68_hist(theta2f)
+                        R68fit_list.append(R68fit)
+                        R68data_list.append(R68data)
                         s1_list.append(s1)
                         s2_list.append(s2)
                         s3_list.append(s3)
-                    #if(len(Eok_list)!=0):    
-                        #plot_khi2(Eok_list , khi2_list, pdf)
-                        #plot_R68(Eok_list , R68_list, pdf)
-                        #plot_sigma3(Eok_list , s3_list, pdf)
-                        #plot_sigma(Eok_list , s1_list, s2_list, s3_list, pdf)
+                    if(len(Eok_list)!=0):    
+                        plot_khi2(Eok_list , khi2_list, pdf)
+                        plot_R68(Eok_list , R68fit_list,R68data_list, pdf)
+                        plot_sigma3(Eok_list , s3_list, pdf)
+                        plot_sigma(Eok_list , s1_list, s2_list, s3_list, pdf)
                         
 file_toofewevents.close()
 file_nosimu.close()
