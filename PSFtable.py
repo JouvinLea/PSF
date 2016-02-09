@@ -40,40 +40,8 @@ def Integral_triplegauss(theta2min,theta2max,s1,s2,s3,A2,A3):
     y = 2*math.pi*(s12*gaus1 + A2*s22*gaus2 + A3*s32*gaus3) 
     norm =  2*math.pi*(s12+ np.abs(A2) * s22 + np.abs(A3) * s32)
     return y/norm
-
-def eff_sigma(s1,s2,s3,A2,A3):
-    s12 = s1*s1
-    s22 = s2*s2
-    s32 = s3*s3
-    theta=np.sqrt(s12+ np.abs(A2) * s22 + np.abs(A3) * s32)
-    return theta
-
-def containment_fraction_singlegauss(theta,sigma):
-    theta = np.asarray(theta, dtype=np.float64)
-
-    return 1 - np.exp(-0.5 * theta ** 2 / sigma**2)
-
-def containment_fraction_tripplegauss(theta,s1,s2,s3,A2,A3):
-    theta = np.asarray(theta, dtype=np.float64)
-    f1=containment_fraction_singlegauss(theta,s1)
-    f2=containment_fraction_singlegauss(theta,s2)
-    f3=containment_fraction_singlegauss(theta,s3)
-    tot=f1+A2*f2+A3*f3
-    return tot
-
-def containment_radius_tripplegauss(containment_fraction,s1,s2,s3,A2,A3):
-    from scipy.optimize import brentq
-    def f(theta):
-        # positive if theta too large
-        return containment_fraction_tripplegauss(theta,s1,s2,s3,A2,A3) - containment_fraction
-    theta_max = eff_sigma(s1,s2,s3,A2,A3)
-        # Expand until we really find a theta_max
-    while f(theta_max) < 0:
-        theta_max *= 2
-    #brentq: regarde la ou la fonction f s annule donc la ou c'est egale a 0.68 de containment
-    return brentq(f, a=0, b=theta_max)
-                
-def R68_Regis(s1,s2,s3,A2,A3):
+    
+def R68(s1,s2,s3,A2,A3):
     x=np.linspace(0,0.3,3000)
     y=triplegauss(x,s1,s2,s3,A2,A3)
     res= y.cumsum()/y.sum()
@@ -383,8 +351,7 @@ for (ieff, eff) in enumerate(effMC):
                             file_khi2toohigh.write(run_number+"\t"+str(E)+"\t"+str(zen)+"\t"+str(off)+"\t"+str(eff)+"\t"+str(len(theta2f))+"\t"+str(KHI2)+"\n") 
                         Eok_list.append(E)    
                         khi2_list.append(KHI2)
-                        #R68=containment_radius_tripplegauss(0.68,s1,s2,s3,A2,A3)
-                        R68=R68_Regis(s1,s2,s3,A2,A3)
+                        R68=R68(s1,s2,s3,A2,A3)
                         R68_list.append(R68)
                         s1_list.append(s1)
                         s2_list.append(s2)
