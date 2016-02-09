@@ -41,8 +41,8 @@ def Integral_triplegauss(theta2min,theta2max,s1,s2,s3,A2,A3):
     norm =  2*math.pi*(s12+ np.abs(A2) * s22 + np.abs(A3) * s32)
     return y/norm
     
-def R68(s1,s2,s3,A2,A3):
-    x=np.linspace(0,0.3,3000)
+def R68(s1,s2,s3,A2,A3, th2max=0.3):
+    x=np.linspace(0,th2max,3000)
     y=triplegauss(x,s1,s2,s3,A2,A3)
     res= y.cumsum()/y.sum()
     ind_R68=np.where(res>=0.68)[0][0]
@@ -131,7 +131,7 @@ def plot_fit_delchi(x,data,err,model_fun,save_fig):
     plt.subplots_adjust(hspace=0.1)
     plt.savefig(save_fig)
 
-def plot_fit_delchi_int(x,data,err,model_fun,save_fig, E, zen, off, eff, pdf, s1, s2, s3):
+def plot_fit_delchi_int(x,data,err,model_fun, E, zen, off, eff, pdf, s1, s2, s3):
     fig = plt.figure()
     gs = gridspec.GridSpec(4, 1)
     ax1 = fig.add_subplot(gs[:3,:]) # rows, cols, plot_num.
@@ -151,7 +151,6 @@ def plot_fit_delchi_int(x,data,err,model_fun,save_fig, E, zen, off, eff, pdf, s1
     resid = (data - model_fun)/err
     ax2.errorbar(x, resid, yerr=np.ones_like(x), fmt='o', color='k')
     plt.subplots_adjust(hspace=0.1)
-    #plt.savefig(save_fig)
     pdf.savefig()
     
 def plot_khi2(E ,khi2, pdf):
@@ -231,6 +230,7 @@ enMC = [0.02, 0.03, 0.05, 0.08, 0.125, 0.2, 0.3, 0.5, 0.8, 1.25, 2, 3, 5, 8, 12.
 #enMC = [0.08, 0.125, 0.2, 0.3, 0.5, 0.8, 1.25, 2, 3, 5, 8, 12.5, 20, 30, 50, 80, 125]
 #enMC = [0.08, 0.5, 0.8,0.125, 1.25, 80, 125]
 #enMC = [0.125]
+#enMC = [3]
 #lnenMC = np.log10(enMC)
 #zenMC = [0, 18, 26, 32, 37, 41, 46, 50, 53, 57, 60, 63, 67, 70]
 zenMC = [0, 26, 37, 46, 53, 60, 67]
@@ -241,9 +241,9 @@ effMC = [50, 60, 80, 100]
 offMC = [0.5, 1.5, 2.5]
 #offMC = [1.0, 1.5]
 #zenMC = [0, 18]
-#zenMC = [0]
+#zenMC = [67]
 #effMC = [100]
-#offMC = [1.0]
+#offMC = [1.5]
 
 binEMC = len(enMC)
 binzen = len(zenMC)
@@ -275,9 +275,9 @@ for (ieff, eff) in enumerate(effMC):
             print off
             for (izen, zen) in enumerate(zenMC):
                 print zen
-                s1_init=0.02
-                s2_init=0.05
-                s3_init=0.08
+                s1_init=0.2
+                s2_init=0.5
+                s3_init=0.7
                 A2_init=0.3
                 A3_init=0.1
                 khi2_list=[]
@@ -300,11 +300,11 @@ for (ieff, eff) in enumerate(effMC):
                             print("Cannot open file: " + PSFfile)
                             print("skipping run")
                             file_nosimu.write(run_number+"\t"+str(E)+"\t"+str(zen)+"\t"+str(off)+"\t"+str(eff)+"\n")
-                            TableSigma1[ien, ioff, izen, ieff] = -1
-                            TableSigma2[ien, ioff, izen, ieff] = -1
-                            TableSigma3[ien, ioff, izen, ieff] = -1
-                            TableA2[ien, ioff, izen, ieff] = -1
-                            TableA3[ien, ioff, izen, ieff] = -1
+                            TableSigma1[ien, ioff, izen, ieff] = -1000
+                            TableSigma2[ien, ioff, izen, ieff] = -1000
+                            TableSigma3[ien, ioff, izen, ieff] = -1000
+                            TableA2[ien, ioff, izen, ieff] = -1000
+                            TableA3[ien, ioff, izen, ieff] = -1000
                             continue
                     
                         #print hdu[1].header["MUONEFF"]
@@ -316,11 +316,11 @@ for (ieff, eff) in enumerate(effMC):
                         theta2f = theta2[index]
                         if(len(theta2f)<40):
                             file_toofewevents.write(run_number+"\t"+str(E)+"\t"+str(zen)+"\t"+str(off)+"\t"+str(eff)+"\t"+str(len(theta2f))+"\n")
-                            TableSigma1[ien, ioff, izen, ieff] = -1
-                            TableSigma2[ien, ioff, izen, ieff] = -1
-                            TableSigma3[ien, ioff, izen, ieff] = -1
-                            TableA2[ien, ioff, izen, ieff] = -1
-                            TableA3[ien, ioff, izen, ieff] = -1
+                            TableSigma1[ien, ioff, izen, ieff] = -1000
+                            TableSigma2[ien, ioff, izen, ieff] = -1000
+                            TableSigma3[ien, ioff, izen, ieff] = -1000
+                            TableA2[ien, ioff, izen, ieff] = -1000
+                            TableA3[ien, ioff, izen, ieff] = -1000
                             continue
                         Nev_perbin=10
                         Nbinmax=50
@@ -366,14 +366,14 @@ for (ieff, eff) in enumerate(effMC):
                         #fitking = lambda x : king(x,sig,gam)
                         #save_fig="plot2/triplegauss_fitspsf_run_"+run_number+"_eff_"+str(eff)+".jpg"
                         #plot_fit_delchi(theta2bin,hist_norm,hist_err,fitgauss,save_fig)
-                        save_fig_int="plot2/INT_triplegauss_fitspsf_run_"+run_number+"_eff_"+str(eff)+".jpg"
-                        plot_fit_delchi_int(theta2bin,hist_norm,hist_err,Int_fitgauss (bin_edges[:-1],bin_edges[1:])/(bsize) ,save_fig_int, E, zen, off, eff, pdf, s1, s2, s3)
+                        #save_fig_int="plot2/INT_triplegauss_fitspsf_run_"+run_number+"_eff_"+str(eff)+"_alwaysmemevalues.jpg"
+                        plot_fit_delchi_int(theta2bin,hist_norm,hist_err,Int_fitgauss (bin_edges[:-1],bin_edges[1:])/(bsize), E, zen, off, eff, pdf, s1, s2, s3)
                         KHI2=khi2_int(theta2bin,hist_norm,hist_err,Int_fitgauss (bin_edges[:-1],bin_edges[1:])/(bsize))
                         if(KHI2 > 2):
                             file_khi2toohigh.write(run_number+"\t"+str(E)+"\t"+str(zen)+"\t"+str(off)+"\t"+str(eff)+"\t"+str(len(theta2f))+"\t"+str(KHI2)+"\n") 
                         Eok_list.append(E)    
                         khi2_list.append(KHI2)
-                        R68fit=R68(s1,s2,s3,A2,A3)
+                        R68fit=R68(s1,s2,s3,A2,A3, theta2max)
                         R68data=R68_hist(theta2f)
                         R68fit_list.append(R68fit)
                         R68data_list.append(R68data)
