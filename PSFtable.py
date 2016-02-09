@@ -243,13 +243,13 @@ enMC = [0.02, 0.03, 0.05, 0.08, 0.125, 0.2, 0.3, 0.5, 0.8, 1.25, 2, 3, 5, 8, 12.
 #enMC = [0.08, 0.5, 0.8,0.125, 1.25, 80, 125]
 #enMC = [0.125]
 #lnenMC = np.log10(enMC)
-#zenMC = [0, 18, 26, 32, 37, 41, 46, 50, 53, 57, 60, 63, 67, 70]
-zenMC = [0, 26, 37, 46, 53, 60, 67]
-#effMC = [50, 60, 70, 80, 90, 100]
-effMC = [60, 80, 100]
+zenMC = [0, 18, 26, 32, 37, 41, 46, 50, 53, 57, 60, 63, 67, 70]
+#zenMC = [0, 26, 37, 46, 53, 60, 67]
+effMC = [50, 60, 70, 80, 90, 100]
+#effMC = [50, 60, 80, 100]
 #effMC = [60, 100]
-#offMC = [0.0, 0.5, 1.0, 1.5, 2.0, 2.5]
-offMC = [0.5, 1.5, 2.5]
+offMC = [0.0, 0.5, 1.0, 1.5, 2.0, 2.5]
+#offMC = [0.5, 1.5, 2.5]
 #offMC = [1.0, 1.5]
 #zenMC = [0, 18]
 #zenMC = [0]
@@ -309,7 +309,12 @@ for (ieff, eff) in enumerate(effMC):
                         except:
                             print("Cannot open file: " + PSFfile)
                             print("skipping run")
-                            file_nosimu.write(run_number+"\t"+str(E)+"\t"+str(zen)+"\t"+str(off)+"\t"+str(eff)+"\n") 
+                            file_nosimu.write(run_number+"\t"+str(E)+"\t"+str(zen)+"\t"+str(off)+"\t"+str(eff)+"\n")
+                            TableSigma1[ien, ioff, izen, ieff] = -1
+                            TableSigma2[ien, ioff, izen, ieff] = -1
+                            TableSigma3[ien, ioff, izen, ieff] = -1
+                            TableA2[ien, ioff, izen, ieff] = -1
+                            TableA3[ien, ioff, izen, ieff] = -1
                             continue
                     
                         #print hdu[1].header["MUONEFF"]
@@ -320,7 +325,12 @@ for (ieff, eff) in enumerate(effMC):
                         index = [theta2<theta2max]
                         theta2f = theta2[index]
                         if(len(theta2f)<40):
-                            file_toofewevents.write(run_number+"\t"+str(E)+"\t"+str(zen)+"\t"+str(off)+"\t"+str(eff)+"\t"+str(len(theta2f))+"\n") 
+                            file_toofewevents.write(run_number+"\t"+str(E)+"\t"+str(zen)+"\t"+str(off)+"\t"+str(eff)+"\t"+str(len(theta2f))+"\n")
+                            TableSigma1[ien, ioff, izen, ieff] = -1
+                            TableSigma2[ien, ioff, izen, ieff] = -1
+                            TableSigma3[ien, ioff, izen, ieff] = -1
+                            TableA2[ien, ioff, izen, ieff] = -1
+                            TableA3[ien, ioff, izen, ieff] = -1
                             continue
                         Nev_perbin=10
                         Nbinmax=50
@@ -366,8 +376,8 @@ for (ieff, eff) in enumerate(effMC):
                         #fitking = lambda x : king(x,sig,gam)
                         #save_fig="plot2/triplegauss_fitspsf_run_"+run_number+"_eff_"+str(eff)+".jpg"
                         #plot_fit_delchi(theta2bin,hist_norm,hist_err,fitgauss,save_fig)
-                        save_fig_int="plot2/INT_triplegauss_fitspsf_run_"+run_number+"_eff_"+str(eff)+".jpg"
-                        plot_fit_delchi_int(theta2bin,hist_norm,hist_err,Int_fitgauss (bin_edges[:-1],bin_edges[1:])/(bsize) ,save_fig_int, E, zen, off, eff, pdf, s1, s2, s3)
+                        #save_fig_int="plot2/INT_triplegauss_fitspsf_run_"+run_number+"_eff_"+str(eff)+".jpg"
+                        #plot_fit_delchi_int(theta2bin,hist_norm,hist_err,Int_fitgauss (bin_edges[:-1],bin_edges[1:])/(bsize) ,save_fig_int, E, zen, off, eff, pdf, s1, s2, s3)
                         KHI2=khi2_int(theta2bin,hist_norm,hist_err,Int_fitgauss (bin_edges[:-1],bin_edges[1:])/(bsize))
                         if(KHI2 > 2):
                             file_khi2toohigh.write(run_number+"\t"+str(E)+"\t"+str(zen)+"\t"+str(off)+"\t"+str(eff)+"\t"+str(len(theta2f))+"\t"+str(KHI2)+"\n") 
@@ -379,18 +389,11 @@ for (ieff, eff) in enumerate(effMC):
                         s1_list.append(s1)
                         s2_list.append(s2)
                         s3_list.append(s3)
-                    if(len(Eok_list)!=0):    
-                        plot_khi2(Eok_list , khi2_list, pdf)
-                        plot_R68(Eok_list , R68_list, pdf)
-                        plot_sigma3(Eok_list , s3_list, pdf)
-                        plot_sigma(Eok_list , s1_list, s2_list, s3_list, pdf)
-                        #save_fig_scipy="plot/triplegauss_fitspsf_run_"+run_number+".jpg"
-                        #plot_fit_delchi(theta2bintest,hist_normtest,hist_err2,fitgauss,save_fig_scipy,5)
-                        #save_fig3="plot/triplegauss_poissonianerror_fitspsf_run_"+run_number+".jpg"
-                        #plot_fit_delchi_test(theta2bin,hist_norm,histerr_test,fitgauss,save_fig3,5)
-                        #save_fig2="plot/king_fitspsf_run_"+run_number+".jpg"
-                        #plot_fit_delchi(theta2bin,hist_norm,hist_err,fitking,save_fig2, 2)
-                        #test_gauss=bin_contigu(theta2bin,hist_norm,fitgauss, 1/3.)
-                        #test_king=bin_contigu(theta2bin,hist_norm,fitking, 1/3.)
+                    #if(len(Eok_list)!=0):    
+                        #plot_khi2(Eok_list , khi2_list, pdf)
+                        #plot_R68(Eok_list , R68_list, pdf)
+                        #plot_sigma3(Eok_list , s3_list, pdf)
+                        #plot_sigma(Eok_list , s1_list, s2_list, s3_list, pdf)
+                        
 file_toofewevents.close()
 file_nosimu.close()
