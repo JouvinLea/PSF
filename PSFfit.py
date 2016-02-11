@@ -35,8 +35,8 @@ class PSFfit(object):
         if(model_func=="triplegauss"):
             m=iminuit.Minuit(self.nllp_triplegauss, s1=s1_init, s2=s2_init,s3=s3_init, A2=A2_init,A3=A3_init,
                                     limit_A2 = (1e-10,10.),limit_A3 = (1e-10,10.),
-                                     limit_s1 = (0.005,0.1), limit_s2 = (0.005,0.2),
-                                     limit_s3 = (0.02,0.5))
+                                     limit_s1 = (0.01,0.3), limit_s2 = (0.01,0.6),
+                                     limit_s3 = (0.02,0.7))
             m.migrad()
             s1_m=m.values['s1']
             s2_m=m.values['s2']
