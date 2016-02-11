@@ -13,9 +13,10 @@ from matplotlib.backends.backend_pdf import PdfPages
 import argparse
 
 """
-For one specific config, store the PSF on 4D numpy table for each value of the Zenithal angle, Offset, Efficiency and Energy used for the MCs simulation
-Example of commande line to run to create this 4D table with the directory of the MC simulation output and the config name as argument
-./PSFtable.py '/Users/jouvin/Desktop/these/WorkGAMMAPI/IRF/PSF/' 'elm_south_stereo_Prod15_4'
+For one specific config, fit the PSF for each MC simulation by a tripplegauss
+Plot for certain simulations the result of the fit as well as the khi2, R68 and sigmas
+Example of commande line to run to plot these parameters  with the directory of the MC simulation output and the config name as argument
+./PSFtable.py '/Users/jouvin/Desktop/these/WorkGAMMAPI/IRF/PSF/' 'elm_south_stereo'
 """
 
 if __name__ == '__main__':
@@ -54,6 +55,22 @@ if __name__ == '__main__':
         y = 2*math.pi*(s12*gaus1 + A2*s22*gaus2 + A3*s32*gaus3) 
         norm =  2*math.pi*(s12+ np.abs(A2) * s22 + np.abs(A3) * s32)
         return y/norm
+
+    def theta2_bin(data, Nev_bin, Nbinmax):
+        """
+        Define an adaptative theta2binning in order to have at least Nev_bin events per bin and a maximal number of bin of Nbinmax
+        You give the theta2 data, the minimum number of events per bin (Nev_bin) and the maximal number of bin you want (Nbinmax).
+        """
+        Nev=len(data)
+        while(Nev/Nev_bin >  Nbinmax):
+            Nev_bin = Nev_bin * 2
+        theta2sorted=np.sort(data)
+        theta2bin=np.array(theta2sorted[0])
+        index=np.arange(Nev_bin, Nev, Nev_bin)
+        for i in index:
+            theta2bin = np.append(theta2bin, theta2sorted[i]) 
+        return theta2bin
+
 
     def R68(s1,s2,s3,A2,A3, th2max=0.3):
         x=np.linspace(0,th2max,3000)
@@ -190,22 +207,7 @@ if __name__ == '__main__':
         plt.title("sigma3 evolution with MC energy")
         pdf.savefig()
 
-    def theta2_bin(data, Nev_bin, Nbinmax):
-        """
-        Define an adaptative theta2binning in order to have at least Nev_bin events per bin and a maximal number of bin of Nbinmax
-        You give the theta2 data, the minimum number of events per bin (Nev_bin) and the maximal number of bin you want (Nbinmax).
-        """
-        Nev=len(data)
-        while(Nev/Nev_bin >  Nbinmax):
-            Nev_bin = Nev_bin * 2
-        theta2sorted=np.sort(data)
-        theta2bin=np.array(theta2sorted[0])
-        index=np.arange(Nev_bin, Nev, Nev_bin)
-        for i in index:
-            theta2bin = np.append(theta2bin, theta2sorted[i]) 
-        return theta2bin
-
-
+    
     """
     We keep the events that have a theta2 inferior to 0.3
     """
