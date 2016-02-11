@@ -344,7 +344,7 @@ for (ieff, eff) in enumerate(effMC):
                         TableA3[ien, ioff, izen, ieff] = A3
                         #TableSig[ien, ioff, izen, ieff] = sig
                         #TableGam[ien, ioff, izen, ieff] = gam
-                        np.savez("PSF_triplegauss_"+config+".npz", TableSigma1=TableSigma1, TableSigma2=TableSigma2, TableSigma3=TableSigma3, TableA2=TableA2, TableA3=TableA3)
+                        #np.savez("PSF_triplegauss_"+config+".npz", TableSigma1=TableSigma1, TableSigma2=TableSigma2, TableSigma3=TableSigma3, TableA2=TableA2, TableA3=TableA3)
                         #np.savez("PSF_king_"+config+".npz", TableSig=TableSig, TableGam=TableGam)  
                         #If the energy bin are in log, we have to take sqrt(Emin*Emax) for the center of the bin
                         #theta2bin = np.sqrt(bin_edges[:-1] * bin_edges[1:])
