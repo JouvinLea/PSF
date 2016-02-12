@@ -16,7 +16,7 @@ import argparse
 For one specific config, fit the PSF for each MC simulation by a tripplegauss 
 Then store the PSF tripplegauss parameters in 4D numpy table for each value of the Zenithal angle, Offset, Efficiency and Energy used for the MCs simulation
 Example of commande line to run to create this 4D table with the directory of the MC simulation output and the config name as argument
-./PSFtable.py '/Users/jouvin/Desktop/these/WorkGAMMAPI/IRF/PSF/' 'elm_south_stereo'
+./PSFtable_script.py '/Users/jouvin/Desktop/these/WorkGAMMAPI/IRF/PSF/' 'elm_south_stereo'
 """
 
 if __name__ == '__main__':
@@ -178,9 +178,9 @@ if __name__ == '__main__':
             for (ioff, off) in enumerate(offMC):
                 for (izen, zen) in enumerate(zenMC):
                     #Initial parameter fot the fit
-                    s1_init=0.2
-                    s2_init=0.5
-                    s3_init=0.7
+                    s1_init=0.02
+                    s2_init=0.05
+                    s3_init=0.08
                     A2_init=0.3
                     A3_init=0.1
                     #Values for good fit stocked in list in order to plot them to have a summary of the fitting
