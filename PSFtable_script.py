@@ -203,11 +203,11 @@ if __name__ == '__main__':
                             print("skipping run")
                             file_nosimu.write(run_number+"\t"+str(E)+"\t"+str(zen)+"\t"+str(off)+"\t"+str(eff)+"\n")
                             #Default value to -1000 if the fit the MCs simulation doesn t exist
-                            TableSigma1[ien, ioff, izen, ieff] = -1000
-                            TableSigma2[ien, ioff, izen, ieff] = -1000
-                            TableSigma3[ien, ioff, izen, ieff] = -1000
-                            TableA2[ien, ioff, izen, ieff] = -1000
-                            TableA3[ien, ioff, izen, ieff] = -1000
+                            TableSigma1[ien, ioff, izen, ieff] = -1
+                            TableSigma2[ien, ioff, izen, ieff] = -1
+                            TableSigma3[ien, ioff, izen, ieff] = -1
+                            TableA2[ien, ioff, izen, ieff] = -1
+                            TableA3[ien, ioff, izen, ieff] = -1
                             continue
 
                         #Select the events with a theta2 inferior to thetamax
@@ -217,11 +217,11 @@ if __name__ == '__main__':
                         #If there are less than 40 events, the fit is not done and we put a default value to -1000
                         if(len(theta2f)<40):
                             file_toofewevents.write(run_number+"\t"+str(E)+"\t"+str(zen)+"\t"+str(off)+"\t"+str(eff)+"\t"+str(len(theta2f))+"\n")
-                            TableSigma1[ien, ioff, izen, ieff] = -1000
-                            TableSigma2[ien, ioff, izen, ieff] = -1000
-                            TableSigma3[ien, ioff, izen, ieff] = -1000
-                            TableA2[ien, ioff, izen, ieff] = -1000
-                            TableA3[ien, ioff, izen, ieff] = -1000
+                            TableSigma1[ien, ioff, izen, ieff] = -1
+                            TableSigma2[ien, ioff, izen, ieff] = -1
+                            TableSigma3[ien, ioff, izen, ieff] = -1
+                            TableA2[ien, ioff, izen, ieff] = -1
+                            TableA3[ien, ioff, izen, ieff] = -1
                             continue
                         #We define for the theta2binning a minimum of 10 events per bin and a maximum of 50 bins
                         Nev_perbin=10
