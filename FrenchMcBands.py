@@ -7,8 +7,8 @@ class FrenchMcBands(object):
         self.part_type=["gamma"]
         self.part_type_digit="1"
         #Second digit of the run: azimuth angle
-        self.azimuth=[180]
-        self.azimuth_digit="4"
+        self.azimuth=[180,0]
+        self.azimuth_digit=["4", "0"]
         #third digit of the run: MC zenithal angle
         self.zenMC = [0, 18, 26, 32, 37, 41, 46, 50, 53, 57, 60, 63, 67, 70]
         self.zenMC_digit=["00","01","02","03","04","05","06","07","08","09","10","11","12","13"]
@@ -20,7 +20,14 @@ class FrenchMcBands(object):
         #sixth digit of the run: MC energy
         self.enMC = [0.02, 0.03, 0.05, 0.08, 0.125, 0.2, 0.3, 0.5, 0.8, 1.25, 2, 3, 5, 8, 12.5, 20, 30, 50, 80, 125]
         self.enMC_digit=["01", "02" , "03" , "04", "05" ,"06" , "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20"]
-        
+
+    def find_azimuth_digit(self, az):
+        """
+        Return the digit associated to a given azimuth angle
+        """
+        i=np.where(np.asarray(self.azimuth)==az)[0]
+        return self.azimuth_digit[i]
+    
     def find_zenMC_digit(self, zen):
         """
         Return the digit associated to a given zenithal angle
@@ -42,11 +49,13 @@ class FrenchMcBands(object):
         i=np.where(np.asarray(self.enMC)==E)[0]
         return self.enMC_digit[i]
     
-    def run_number(self,zen, off, E):
+    def run_number(self,az,zen, off, E):
         nen=self.find_enMC_digit(E)
         nzen=self.find_zenMC_digit(zen)
         noff=self.find_offMC_digit(off)
-        return self.part_type_digit+self.azimuth_digit+nzen+noff+self.energy_type+nen
+        naz=self.find_azimuth_digit(az)
+        return self.part_type_digit+naz+nzen+noff+self.energy_type+nen
+    
     def ener_MC(self, run_number):
         i=np.where(np.array(self.enMC_digit)==run_number[6:8])
         return self.enMC[i[0][0]]

@@ -16,16 +16,17 @@ import argparse
 For one specific config, fit the PSF for each MC simulation by a tripplegauss 
 Then store the PSF tripplegauss parameters in 4D numpy table for each value of the Zenithal angle, Offset, Efficiency and Energy used for the MCs simulation
 Example of commande line to run to create this 4D table with the directory of the MC simulation output and the config name as argument
-./PSFtable_script.py '/Users/jouvin/Desktop/these/WorkGAMMAPI/IRF/PSF/' 'elm_south_stereo'
-./PSFtable_script.py '/Users/jouvin/Desktop/these/WorkGAMMAPI/IRF/PSF/' 'std_north_1b'
+./PSFtable_script.py '/Users/jouvin/Desktop/these/WorkGAMMAPI/IRF/PSF/' 'elm_south_stereo' 180
+./PSFtable_script.py '/Users/jouvin/Desktop/these/WorkGAMMAPI/IRF/PSF/' 'std_north_1b' 0
 """
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Store the PSFs from Mc simulation in a 4D numpy table')
     parser.add_argument('directory', action="store", help='directory of the fits file of the MC simulation that we will use for fitting the PSF')
     parser.add_argument('config', action="store", help='Config')
+    parser.add_argument('az_angle', action="store", help='azimuth Angle')
     results = parser.parse_args()
-    print "Store the PSF in a 4D table from the MC simulations in ", results.directory , " and for the config ", results.config
+    print "Store the PSF in a 4D table from the MC simulations in ", results.directory , " and for the config ", results.config, "matching with a zenith angle", results.az_angle
 
     """
     Fonction defenition
@@ -152,7 +153,6 @@ if __name__ == '__main__':
     zenMC = [0, 18, 26, 32, 37, 41, 46, 50, 53, 57, 60, 63, 67, 70]    
     effMC = [50, 60, 70, 80, 90, 100]    
     offMC = [0.0, 0.5, 1.0, 1.5, 2.0, 2.5]    
-                    
     binEMC = len(enMC)
     binzen = len(zenMC)
     binoff = len(offMC)
@@ -187,7 +187,7 @@ if __name__ == '__main__':
                     A3_init=0.1
                     for (ien, E) in enumerate(enMC):
                         #Calculate the runnnumber for the MC zenithal angle, offset and energy
-                        run_number=MCband.run_number(zen, off, E)
+                        run_number=MCband.run_number(int(results.az_angle),zen, off, E)
                         PSFfile=directory+"/run_"+run_number+"_Eff"+str(eff)+"_psf.fits"
                         try: 
                             hdu=pf.open(PSFfile)
