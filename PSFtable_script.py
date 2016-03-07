@@ -17,6 +17,7 @@ For one specific config, fit the PSF for each MC simulation by a tripplegauss
 Then store the PSF tripplegauss parameters in 4D numpy table for each value of the Zenithal angle, Offset, Efficiency and Energy used for the MCs simulation
 Example of commande line to run to create this 4D table with the directory of the MC simulation output and the config name as argument
 ./PSFtable_script.py '/Users/jouvin/Desktop/these/WorkGAMMAPI/IRF/PSF/' 'elm_south_stereo'
+./PSFtable_script.py '/Users/jouvin/Desktop/these/WorkGAMMAPI/IRF/PSF/' 'std_north_1b'
 """
 
 if __name__ == '__main__':
@@ -31,6 +32,7 @@ if __name__ == '__main__':
     """
 
     def triplegauss(theta2,s1,s2,s3,A2,A3):
+        
         s12 = s1*s1
         s22 = s2*s2
         s32 = s3*s3
@@ -183,14 +185,6 @@ if __name__ == '__main__':
                     s3_init=0.08
                     A2_init=0.3
                     A3_init=0.1
-                    #Values for good fit stocked in list in order to plot them to have a summary of the fitting
-                    khi2_list=[]
-                    Eok_list=[]
-                    R68fit_list=[]
-                    R68data_list=[]
-                    s1_list=[]
-                    s2_list=[]
-                    s3_list=[]
                     for (ien, E) in enumerate(enMC):
                         #Calculate the runnnumber for the MC zenithal angle, offset and energy
                         run_number=MCband.run_number(zen, off, E)
@@ -262,11 +256,10 @@ if __name__ == '__main__':
                         Int_fitgauss = lambda x1,x2 : Integral_triplegauss(x1,x2,s1,s2,s3,A2,A3)                    
                         KHI2=khi2_int(theta2bin,hist_norm,hist_err,Int_fitgauss (bin_edges[:-1],bin_edges[1:])/(bsize))
                         if(KHI2 > 2):
-                            file_khi2toohigh.write(run_number+"\t"+str(E)+"\t"+str(zen)+"\t"+str(off)+"\t"+str(eff)+"\t"+str(len(theta2f))+"\t"+str(KHI2)+"\n") 
-                        Eok_list.append(E)    
-                        khi2_list.append(KHI2)
-                        R68fit=R68(s1,s2,s3,A2,A3, theta2max)
-                        R68data=R68_hist(theta2f)
+                            file_khi2toohigh.write(run_number+"\t"+str(E)+"\t"+str(zen)+"\t"+str(off)+"\t"+str(eff)+"\t"+str(len(theta2f))+"\t"+str(KHI2)+"\n")
+                        #R68 for the fit and for the histogram distribution
+                        #R68fit=R68(s1,s2,s3,A2,A3, theta2max)
+                        #R68data=R68_hist(theta2f)
 
 
     file_toofewevents.close()

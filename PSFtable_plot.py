@@ -219,14 +219,14 @@ if __name__ == '__main__':
     enMC = [0.02, 0.03, 0.05, 0.08, 0.125, 0.2, 0.3, 0.5, 0.8, 1.25, 2, 3, 5, 8, 12.5, 20, 30, 50, 80, 125]
     #enMC = [0.125]
     #zenMC = [0, 18, 26, 32, 37, 41, 46, 50, 53, 57, 60, 63, 67, 70]
-    #zenMC = [0, 26, 37, 46, 53, 60, 67]
+    zenMC = [0, 26, 37, 46, 53, 60, 67]
     #effMC = [50, 60, 70, 80, 90, 100]
-    #effMC = [50, 60, 80, 100]
+    effMC = [50, 60, 80, 100]
     #offMC = [0.0, 0.5, 1.0, 1.5, 2.0, 2.5]
-    #offMC = [0.5, 1.5, 2.5]
-    zenMC = [37]
-    effMC = [100]
-    offMC = [1.5]
+    offMC = [0.5, 1.5, 2.5]
+    #zenMC = [67]
+    #effMC = [100]
+    #offMC = [1.5]
     binEMC = len(enMC)
     binzen = len(zenMC)
     binoff = len(offMC)
@@ -254,9 +254,9 @@ if __name__ == '__main__':
             for (ioff, off) in enumerate(offMC):
                 for (izen, zen) in enumerate(zenMC):
                     #Initial parameter fot the fit
-                    s1_init=0.02
-                    s2_init=0.05
-                    s3_init=0.08
+                    s1_init=0.2
+                    s2_init=0.5
+                    s3_init=0.8
                     A2_init=0.3
                     A3_init=0.1
                     #Values for good fit stocked in list in order to plot them to have a summary of the fitting
@@ -280,11 +280,11 @@ if __name__ == '__main__':
                                 print("skipping run")
                                 file_nosimu.write(run_number+"\t"+str(E)+"\t"+str(zen)+"\t"+str(off)+"\t"+str(eff)+"\n")
                                 #Default value to -1000 if the fit the MCs simulation doesn t exist
-                                TableSigma1[ien, ioff, izen, ieff] = -1000
-                                TableSigma2[ien, ioff, izen, ieff] = -1000
-                                TableSigma3[ien, ioff, izen, ieff] = -1000
-                                TableA2[ien, ioff, izen, ieff] = -1000
-                                TableA3[ien, ioff, izen, ieff] = -1000
+                                TableSigma1[ien, ioff, izen, ieff] = -1
+                                TableSigma2[ien, ioff, izen, ieff] = -1
+                                TableSigma3[ien, ioff, izen, ieff] = -1
+                                TableA2[ien, ioff, izen, ieff] = -1
+                                TableA3[ien, ioff, izen, ieff] = -1
                                 continue
 
                             #Select the events with a theta2 inferior to thetamax
@@ -294,11 +294,11 @@ if __name__ == '__main__':
                             #If there are less than 40 events, the fit is not done and we put a default value to -1000
                             if(len(theta2f)<40):
                                 file_toofewevents.write(run_number+"\t"+str(E)+"\t"+str(zen)+"\t"+str(off)+"\t"+str(eff)+"\t"+str(len(theta2f))+"\n")
-                                TableSigma1[ien, ioff, izen, ieff] = -1000
-                                TableSigma2[ien, ioff, izen, ieff] = -1000
-                                TableSigma3[ien, ioff, izen, ieff] = -1000
-                                TableA2[ien, ioff, izen, ieff] = -1000
-                                TableA3[ien, ioff, izen, ieff] = -1000
+                                TableSigma1[ien, ioff, izen, ieff] = -1
+                                TableSigma2[ien, ioff, izen, ieff] = -1
+                                TableSigma3[ien, ioff, izen, ieff] = -1
+                                TableA2[ien, ioff, izen, ieff] = -1
+                                TableA3[ien, ioff, izen, ieff] = -1
                                 continue
                             #We define for the theta2binning a minimum of 10 events per bin and a maximum of 50 bins
                             Nev_perbin=10
